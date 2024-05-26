@@ -42,59 +42,6 @@ namespace API.Services
             return await _dataContext.Contact.AnyAsync(x => x.Name == username && x.Phone == phone);
         }
 
-        public async Task<bool> UniqueContactPhoneExists(string username, string phone, string contactCreator)
-        {
-            return await _dataContext.Contact.AnyAsync(x => x.Name == username && x.Phone == phone && x.CreatedBy == contactCreator);
-        }
-
-        public async Task<bool> UniqueContactEmailExists(string username, string email, string contactCreator)
-        {
-            return await _dataContext.Contact.AnyAsync(x => x.Name == username && x.Email == email && x.CreatedBy == contactCreator);
-        }
-
-        public Task<Contact> CreateContact(NewContactDto contactDto)
-        {
-            var contact = _mapper.Map<Contact>(contactDto);
-            _dataContext.Contact.Add(contact);
-            _dataContext.SaveChanges();
-            return Task.FromResult(contact);
-        }
-
-        public async Task<IEnumerable<GetContactsDto>> GetMyContacts(string contactCreator)
-        {
-            var result = await _dataContext.Contact.Select(x => new GetContactsDto
-            {
-                Name = x.Name,
-                Phone = x.Phone,
-                Email = x.Email,
-                CreatedBy = x.CreatedBy,
-                CreatedAt = x.CreatedAt
-            })
-            .OrderBy(x => x.Name)
-            .Where(x => x.CreatedBy == contactCreator)
-            .ToListAsync();
-
-            return result;
-        }
-
-        public async Task<IEnumerable<GetContactsDto>> GetContactByName(string name, string contactCreator)
-        {
-            var result = await _dataContext.Contact.Select(x => new GetContactsDto
-            {
-                Name = x.Name,
-                Phone = x.Phone,
-                Email = x.Email,
-                CreatedBy = x.CreatedBy,
-                CreatedAt = x.CreatedAt
-            })
-            .OrderBy(x => x.Name)
-            .Where(x => x.Name.Contains(name))
-            .Where(x => x.CreatedBy == contactCreator)
-            .ToListAsync();
-
-            return result;
-        }
-
         public async Task<bool> DeleteProfile(string id)
         {
             var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Id.ToString() == id);

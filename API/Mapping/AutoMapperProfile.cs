@@ -12,6 +12,7 @@ namespace API.Mapping
             CreateMap<GetUsersDto, AppUser>();
             CreateMap<NewContactDto, Contact>();
             CreateMap<Contact, NewContactDto>();
+            CreateMap<EditContactDto, Contact>();
         }
     }
 }
