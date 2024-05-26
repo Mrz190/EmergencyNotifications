@@ -88,7 +88,21 @@ namespace API.Services
         public async Task UpdateContactAsync(Contact contact)
         {
             _dataContext.Entry(contact).State = EntityState.Modified;
-            await _dataContext.SaveChangesAsync();
+            await SaveChangesAsync();
+        }
+
+        public async Task<bool> DeleteContactAsync(int id, string contactCreator)
+        {
+            var itemToRemove = _dataContext.Contact
+                .SingleOrDefault(x => x.ContactId == id && x.CreatedBy == contactCreator); 
+
+            if (itemToRemove != null)
+            {
+                _dataContext.Contact.Remove(itemToRemove);
+                await SaveChangesAsync();
+                return true;
+            }
+            return false;
         }
 
         public async Task<bool> SaveChangesAsync()

@@ -5,7 +5,6 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using static IdentityServer4.Models.IdentityResources;
 
 namespace API.Controllers
 {
@@ -72,10 +71,18 @@ namespace API.Controllers
                 await _contactRepository.UpdateContactAsync(existingContact);
                 return NoContent();
             }
-            catch (Exception ex)
+            catch
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Произошла ошибка при обновлении контакта");
             }
+        }
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteCotnact(int id)
+        {
+            var contactCreator = User.FindFirstValue(ClaimTypes.Name);
+
+            if (await _contactRepository.DeleteContactAsync(id, contactCreator) == false) return BadRequest();
+            return Ok("Contact deleted");
         }
     }
 }
