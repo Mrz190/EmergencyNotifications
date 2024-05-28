@@ -3,6 +3,7 @@ using API.Entity;
 using API.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -18,7 +19,6 @@ namespace API.Controllers
             _contactRepository = contactRepository;
             _mapper = mapper;
         }
-
 
         [HttpPost("add-contact")]
         public async Task<ActionResult<Contact>> AddContact(NewContactDto contactDto)
@@ -42,7 +42,6 @@ namespace API.Controllers
         public async Task<IEnumerable<GetContactsDto>> GetMyContacts()
         {
             var contactCreator = User.FindFirstValue(ClaimTypes.Name);
-
             return await _contactRepository.GetMyContacts(contactCreator);
         }
 
@@ -61,8 +60,10 @@ namespace API.Controllers
             var existingContact = await _contactRepository.GetContactByIdAsync(id);
             if (existingContact == null) return NotFound();
 
-            if (await _contactRepository.UniqueContactPhoneExists(id, updatedContact.Phone, contactCreator)) return BadRequest("A contact with such a phone already exists in your possession");
-            if (await _contactRepository.UniqueContactEmailExists(id, updatedContact.Phone, contactCreator)) return BadRequest("A contact with such an email already exists in your possession");
+            if (await _contactRepository.UniqueContactPhoneExists(id, updatedContact.Phone, contactCreator))
+                return BadRequest("A contact with such a phone already exists in your possession");
+            if (await _contactRepository.UniqueContactEmailExists(id, updatedContact.Email, contactCreator))
+                return BadRequest("A contact with such an email already exists in your possession");
 
             _mapper.Map(updatedContact, existingContact);
 
@@ -76,12 +77,56 @@ namespace API.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Произошла ошибка при обновлении контакта");
             }
         }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchContact(int id, [FromBody] JsonPatchDocument<EditContactDto> patchDoc)
+        {
+            if (patchDoc == null)
+            {
+                return BadRequest();
+            }
+
+            var contactCreator = User.FindFirstValue(ClaimTypes.Name);
+            var existingContact = await _contactRepository.GetContactByIdAsync(id);
+            if (existingContact == null || existingContact.CreatedBy != contactCreator)
+            {
+                return NotFound();
+            }
+
+            var contactToPatch = _mapper.Map<EditContactDto>(existingContact);
+            patchDoc.ApplyTo(contactToPatch, ModelState);
+
+            if (!TryValidateModel(contactToPatch))
+            {
+                return ValidationProblem(ModelState);
+            }
+
+            if (await _contactRepository.UniqueContactPhoneExists(id, contactToPatch.Phone, contactCreator))
+                return BadRequest("A contact with such a phone already exists in your possession");
+            if (await _contactRepository.UniqueContactEmailExists(id, contactToPatch.Email, contactCreator))
+                return BadRequest("A contact with such an email already exists in your possession");
+
+            _mapper.Map(contactToPatch, existingContact);
+
+            try
+            {
+                await _contactRepository.UpdateContactAsync(existingContact);
+                return NoContent();
+            }
+            catch
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Произошла ошибка при обновлении контакта");
+            }
+        }
+
+
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteCotnact(int id)
+        public async Task<ActionResult> DeleteContact(int id)
         {
             var contactCreator = User.FindFirstValue(ClaimTypes.Name);
 
-            if (await _contactRepository.DeleteContactAsync(id, contactCreator) == false) return BadRequest();
+            if (await _contactRepository.DeleteContactAsync(id, contactCreator) == false)
+                return BadRequest();
             return Ok("Contact deleted");
         }
     }
