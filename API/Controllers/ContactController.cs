@@ -5,6 +5,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Security.Claims;
 
 namespace API.Controllers
@@ -83,15 +84,13 @@ namespace API.Controllers
         {
             if (patchDoc == null)
             {
-                return BadRequest();
+                return BadRequest("Invalid patch document");
             }
 
             var contactCreator = User.FindFirstValue(ClaimTypes.Name);
+
             var existingContact = await _contactRepository.GetContactByIdAsync(id);
-            if (existingContact == null || existingContact.CreatedBy != contactCreator)
-            {
-                return NotFound();
-            }
+            if (existingContact == null) return NotFound();
 
             var contactToPatch = _mapper.Map<EditContactDto>(existingContact);
             patchDoc.ApplyTo(contactToPatch, ModelState);
@@ -111,14 +110,13 @@ namespace API.Controllers
             try
             {
                 await _contactRepository.UpdateContactAsync(existingContact);
-                return NoContent();
+                return Ok(existingContact);
             }
             catch
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Произошла ошибка при обновлении контакта");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the contact");
             }
         }
-
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteContact(int id)
