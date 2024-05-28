@@ -13,6 +13,7 @@ namespace API.Mapping
             CreateMap<NewContactDto, Contact>();
             CreateMap<Contact, NewContactDto>();
             CreateMap<EditContactDto, Contact>();
+            CreateMap<Contact, EditContactDto>();
         }
     }
 }
