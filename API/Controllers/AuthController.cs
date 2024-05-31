@@ -14,6 +14,7 @@ namespace API.Controllers
         private readonly IMapper _mapper;
         private readonly IUserRepository _userRepository;
         private readonly ITokenService _token;
+
         public AuthController(UserManager<AppUser> userManager, IMapper mapper, IUserRepository userRepository, ITokenService token)
         {
             _userManager = userManager;
@@ -22,27 +23,32 @@ namespace API.Controllers
             _token = token;
         }
 
+        [HttpGet]
+        public IActionResult Get()
+        {
+            throw new Exception("This is an example exception.");
+        }
+
         [HttpPost("reg")]
         public async Task<ActionResult<UserDto>> CreateMember(RegDto regDto)
         {
-            // add main middleware
             try
             {
-                if (await UserExists(regDto.UserName)) return BadRequest("User already exist");
-                if (await EmailExist(regDto.Email)) return BadRequest("Account with this email already exist");
+                if (await UserExists(regDto.UserName)) return BadRequest("User already exists.");
+                if (await EmailExist(regDto.Email)) return BadRequest("Account with this email already exists.");
 
                 var user = _mapper.Map<AppUser>(regDto);
                 user.UserName = regDto.UserName.ToLower();
                 user.IsActive = true;
 
                 var result = await _userManager.CreateAsync(user, regDto.Password);
-                if (!result.Succeeded) throw new Exception();
+                if (!result.Succeeded) throw new Exception("Failed to create user.");
 
                 var roleExists = await _userManager.IsInRoleAsync(user, "Member");
                 if (!roleExists)
                 {
                     var roleResult = await _userManager.AddToRoleAsync(user, "Member");
-                    if (!roleResult.Succeeded) throw new Exception();
+                    if (!roleResult.Succeeded) throw new Exception("Failed to assign role.");
                 }
 
                 return new UserDto
@@ -56,22 +62,21 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return StatusCode(500, ex.Message);
             }
         }
 
         [HttpPost("login")]
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
         {
-            var user = await _userManager.Users.SingleOrDefaultAsync(n => n.UserName == loginDto.UserName && n.IsActive == true);
-
-            if (user == null) return BadRequest("Invalid username/password");
+            var user = await _userManager.Users.SingleOrDefaultAsync(n => n.UserName == loginDto.UserName && n.IsActive);
+            if (user == null) return BadRequest("Invalid username/password.");
 
             var result = await _userManager.CheckPasswordAsync(user, loginDto.Password);
+            if (!result) return BadRequest("Invalid username/password.");
 
-            if (!result) return BadRequest("Invalid username/password");
-
-            return new UserDto { 
+            return new UserDto
+            {
                 UserName = user.UserName,
                 City = user.City,
                 Country = user.Country,
@@ -94,15 +99,14 @@ namespace API.Controllers
             foreach (var user in users) await _userManager.DeleteAsync(user);
         }
 
-
         private async Task<bool> UserExists(string username)
         {
-            return await _userManager.Users.AnyAsync(x => x.UserName == username.ToLower() && x.IsActive == true);
+            return await _userManager.Users.AnyAsync(x => x.UserName == username.ToLower() && x.IsActive);
         }
 
         private async Task<bool> EmailExist(string email)
         {
-            return await _userManager.Users.AnyAsync(x => x.Email == email && x.IsActive == true);
+            return await _userManager.Users.AnyAsync(x => x.Email == email && x.IsActive);
         }
     }
 }
