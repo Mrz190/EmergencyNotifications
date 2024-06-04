@@ -12,7 +12,6 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Настройка логирования
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Error()
     .WriteTo.Console()
@@ -67,7 +66,7 @@ builder.Services.AddLogging();
 
 var app = builder.Build();
 
-app.UseMiddleware<ExceptionMiddleware>(); // Должно быть здесь, до остальных middleware
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseCors(builder => builder
     .AllowAnyHeader()
@@ -96,7 +95,6 @@ using (var scope = app.Services.CreateScope())
         var userManager = services.GetRequiredService<UserManager<AppUser>>();
         var roleManager = services.GetRequiredService<RoleManager<AppRole>>();
 
-        // Seed roles if they don't exist
         if (!await roleManager.RoleExistsAsync("Member"))
         {
             await roleManager.CreateAsync(new AppRole { Name = "Member" });
