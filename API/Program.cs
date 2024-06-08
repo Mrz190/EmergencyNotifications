@@ -50,7 +50,7 @@ builder.Services.AddSwaggerGen(c =>
     });
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Examaple Api",
+        Title = "Example Api",
         Version = "v1",
         Description = "Description example",
         Contact = new OpenApiContact
@@ -73,7 +73,7 @@ builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailS
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddTransient<IMailService, MailService>();
+builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddControllers();
 builder.Services.AddLogging();

@@ -1,13 +1,11 @@
-﻿using API.Dto;
-using API.Interfaces;
-using API.Services;
+﻿using API.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Mail;
-using System.Threading.Tasks;
 
 namespace API.Controllers
 {
+    [Authorize]
     public class EmailController : BaseApiController
     {
         private readonly IMapper _mapper;
@@ -20,16 +18,49 @@ namespace API.Controllers
         }
 
         [HttpPost("send")]
-        public async Task<IActionResult> SendEmail([FromBody] EmailRequest request)
+        public async Task<ActionResult> SendEmail([FromBody] EmailRequest request)
         {
-            await _emailService.SendEmailAsync(request.Email, request.Subject, request.Message);
+            await _emailService.SendEmailAsync_(request.Email, request.Subject, request.Message);
             return Ok("Email sent successfully");
         }
+
+        [HttpPost("send_mail")]
+        public async Task<ActionResult> SendMailAsync(MailRequest mailRequest)
+        {
+            await _emailService.SendMailAsync(mailRequest);
+            return Ok("Mail sent sucessfully");
+        }
     }
+
     public class EmailRequest
     {
         public string Email { get; set; }
         public string Subject { get; set; }
         public string Message { get; set; }
+    }
+    public class RequestEmail
+    {
+        public int Id { get; set; }
+        public string Mail { get; set; }
+    }
+
+
+
+
+
+    public class Message
+    {
+        public string Subject { get; set; }
+        public string MessageBody { get; set; }
+    }
+    public class Recipient
+    {
+        public int Id { get; set; }
+        public string Mail { get; set; }
+    }
+    public class MailRequest
+    {
+        public Message MailMessage { get; set; } 
+        public List<Recipient> Recipients { get; set; }
     }
 }

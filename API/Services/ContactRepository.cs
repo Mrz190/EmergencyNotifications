@@ -1,9 +1,11 @@
-﻿using API.Data;
+﻿using API.Controllers;
+using API.Data;
 using API.Dto;
 using API.Entity;
 using API.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Crypto;
 
 namespace API.Services
 {
@@ -89,6 +91,18 @@ namespace API.Services
         {
             _dataContext.Entry(contact).State = EntityState.Modified;
             await SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Recipient>> GetContactsForMail(List<int> ids)
+        {
+            return await _dataContext.Contact
+                                 .Where(c => ids.Contains(c.ContactId))
+                                 .Select(c => new Recipient
+                                 {
+                                     Id = c.ContactId,
+                                     Mail = c.Email
+                                 })
+                                 .ToListAsync();
         }
 
         public async Task<bool> DeleteContactAsync(int id, string contactCreator)
