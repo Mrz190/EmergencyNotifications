@@ -21,7 +21,7 @@ namespace API.Services
             _contactRepository = contactRepository;
         }
 
-        public async Task SendMailAsync(MailRequest mailRequest)
+        public async Task<bool> SendMailAsync(MailRequest mailRequest)
         {
             using var smtp = new SmtpClient(_mailSettings.SmtpServer, _mailSettings.SmtpPort)
             {
@@ -30,7 +30,10 @@ namespace API.Services
             };
 
             var recipientIds = mailRequest.Recipients.Select(r => r.Id).ToList();
-            var recipients = await _contactRepository.GetContactsForMail(recipientIds);
+            List<Recipient> recipients_list = mailRequest.Recipients.ToList();
+
+            var recipients = await _contactRepository.GetContactsForMail(recipients_list);
+            if (recipients.Count() == 0) return false;
                   
             foreach (var recipient in recipients)
             {
@@ -41,6 +44,7 @@ namespace API.Services
                 mailMessage.Headers.Add("X-MSMail-Priority", "Normal");
                 await smtp.SendMailAsync(mailMessage);
             }
+            return true;
         }
     }
 }

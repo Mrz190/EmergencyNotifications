@@ -93,16 +93,19 @@ namespace API.Services
             await SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Recipient>> GetContactsForMail(List<int> ids)
+        public async Task<IEnumerable<Recipient>> GetContactsForMail(List<Recipient> recipients)
         {
+            var ids = recipients.Select(r => r.Id).ToList();
+            var mails = recipients.Select(r => r.Mail).ToList();
+
             return await _dataContext.Contact
-                                 .Where(c => ids.Contains(c.ContactId))
-                                 .Select(c => new Recipient
-                                 {
-                                     Id = c.ContactId,
-                                     Mail = c.Email
-                                 })
-                                 .ToListAsync();
+                                     .Where(c => ids.Contains(c.ContactId) && mails.Contains(c.Email))
+                                     .Select(c => new Recipient
+                                     {
+                                         Id = c.ContactId,
+                                         Mail = c.Email
+                                     })
+                                     .ToListAsync();
         }
 
         public async Task<bool> DeleteContactAsync(int id, string contactCreator)

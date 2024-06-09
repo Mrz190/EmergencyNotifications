@@ -20,7 +20,7 @@ namespace API.Controllers
         [HttpPost("send-mail")]
         public async Task<ActionResult> SendMailAsync(MailRequest mailRequest)
         {
-            await _emailService.SendMailAsync(mailRequest);
+            if (await _emailService.SendMailAsync(mailRequest) == false) return BadRequest("Something was wrong while sending message.");
             return Ok("Mail sent sucessfully");
         }
     }

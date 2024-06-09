@@ -15,7 +15,7 @@ namespace API.Interfaces
         Task<IEnumerable<GetContactsDto>> GetMyContacts(string contactCreator);
         Task<IEnumerable<GetContactsDto>> GetContactByName(string name, string contactCreator);
         Task UpdateContactAsync(Contact contact);
-        Task<IEnumerable<Recipient>> GetContactsForMail(List<int> ids);
+        Task<IEnumerable<Recipient>> GetContactsForMail(List<Recipient> recipients);
         Task<bool> DeleteContactAsync(int id, string contactCreator);    
         Task<bool> SaveChangesAsync();
     }

@@ -5,6 +5,6 @@ namespace API.Interfaces
 {
     public interface IMailService
     {
-        public Task SendMailAsync(MailRequest mailRequest);
+        public Task<bool> SendMailAsync(MailRequest mailRequest);
     }
 }
