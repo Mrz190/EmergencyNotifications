@@ -21,22 +21,6 @@ namespace API.Services
             _contactRepository = contactRepository;
         }
 
-        public async Task SendEmailAsync_(string email, string subject, string message)
-        {
-            using var smtp = new SmtpClient(_mailSettings.SmtpServer, _mailSettings.SmtpPort)
-            {
-                Credentials = new NetworkCredential(_mailSettings.SmtpUser, _mailSettings.SmtpPass),
-                EnableSsl = true
-            };
-
-            var mailMessage = new MailMessage(_mailSettings.SmtpUser, email, subject, message);
-            mailMessage.Priority = MailPriority.Normal;
-            mailMessage.IsBodyHtml = true;
-            mailMessage.Headers.Add("X-Priority", "3");
-            mailMessage.Headers.Add("X-MSMail-Priority", "Normal");
-
-            await smtp.SendMailAsync(mailMessage);
-        }
         public async Task SendMailAsync(MailRequest mailRequest)
         {
             using var smtp = new SmtpClient(_mailSettings.SmtpServer, _mailSettings.SmtpPort)
@@ -50,7 +34,6 @@ namespace API.Services
                   
             foreach (var recipient in recipients)
             {
-                Console.WriteLine($"Message for {recipient.Mail}");
                 var mailMessage = new MailMessage(_mailSettings.SmtpUser, recipient.Mail, mailRequest.MailMessage.Subject, mailRequest.MailMessage.MessageBody);
                 mailMessage.Priority = MailPriority.Normal;
                 mailMessage.IsBodyHtml = true;
