@@ -48,6 +48,18 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     });
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Example Api",
+        Version = "v1",
+        Description = "Description example",
+        Contact = new OpenApiContact
+        {
+            Name = "Example contact",
+            Email = "example@gmail.com",
+            Url = new Uri("https://example.com/contact")
+        }
+    });
 });
 
 builder.Services.AddIdentityServices(builder.Configuration);
@@ -57,9 +69,11 @@ builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DbConnection"));
 });
 
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddControllers();
 builder.Services.AddLogging();
@@ -74,8 +88,14 @@ app.UseCors(builder => builder
     .AllowCredentials()
     .WithOrigins("http://localhost:7206"));
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    });
+}
 
 app.UseHttpsRedirection();
 

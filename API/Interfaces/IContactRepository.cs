@@ -1,4 +1,5 @@
-﻿using API.Dto;
+﻿using API.Controllers;
+using API.Dto;
 using API.Entity;
 
 namespace API.Interfaces
@@ -14,6 +15,7 @@ namespace API.Interfaces
         Task<IEnumerable<GetContactsDto>> GetMyContacts(string contactCreator);
         Task<IEnumerable<GetContactsDto>> GetContactByName(string name, string contactCreator);
         Task UpdateContactAsync(Contact contact);
+        Task<IEnumerable<Recipient>> GetContactsForMail(List<int> ids);
         Task<bool> DeleteContactAsync(int id, string contactCreator);    
         Task<bool> SaveChangesAsync();
     }
