@@ -1,6 +1,7 @@
 using API.Data;
 using API.Entity;
 using API.Extensions;
+using API.Helpers;
 using API.Interfaces;
 using API.Middleware;
 using API.Services;
@@ -74,6 +75,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IMailService, MailService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddControllers();
 builder.Services.AddLogging();

@@ -26,6 +26,7 @@ namespace API.Services
                 new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim("Phone", user.PhoneNumber),
                 new Claim("IsActive", user.IsActive.ToString())
             };
 

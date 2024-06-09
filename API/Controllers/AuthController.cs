@@ -10,17 +10,17 @@ namespace API.Controllers
 {
     public class AuthController : BaseApiController
     {
+        private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<AppUser> _userManager;
         private readonly IMapper _mapper;
-        private readonly IUserRepository _userRepository;
         private readonly ITokenService _token;
 
-        public AuthController(UserManager<AppUser> userManager, IMapper mapper, IUserRepository userRepository, ITokenService token)
+        public AuthController(UserManager<AppUser> userManager, IMapper mapper, ITokenService token, IUnitOfWork unitOfWork)
         {
             _userManager = userManager;
             _mapper = mapper;
-            _userRepository = userRepository;
             _token = token;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpGet]
@@ -88,7 +88,7 @@ namespace API.Controllers
         [HttpGet("all")]
         public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers()
         {
-            var result = await _userRepository.GetUsersAsync();
+            var result = await _unitOfWork.UserRepository.GetUsersAsync();
             return Ok(result);
         }
 
