@@ -12,8 +12,6 @@ namespace API.Helpers
         private readonly DataContext _context;
         private readonly IMapper _mapper;
         private readonly UserManager<AppUser> _userManager;
-        private IUserRepository _userRepository;
-        private IContactRepository _contactRepository;
 
         public UnitOfWork(DataContext context, IMapper mapper, UserManager<AppUser> userManager)
         {
