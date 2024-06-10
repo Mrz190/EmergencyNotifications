@@ -70,6 +70,14 @@ builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DbConnection"));
 });
 
+builder.Services.AddSingleton<MongoDbContext>(serviceProvider =>
+{
+    var mongoSettings = builder.Configuration.GetSection("MongoSettings");
+    var connectionsStrings = mongoSettings.GetValue<string>("ConnectionString");
+    var databaseName = mongoSettings.GetValue<string>("DatabaseName");
+    return new MongoDbContext(connectionsStrings, databaseName);
+});
+
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
