@@ -50,8 +50,8 @@ namespace API.Services
                     Recipient = recipient.Mail,
                     Subject = mailRequest.MailMessage.Subject,
                     MessageBody = mailRequest.MailMessage.MessageBody,
-                    Status = "в процессе",
-                    CreatedAt = DateTime.Now
+                    Status = "in proccess",
+                    CreatedAt = DateTime.UtcNow
                 };
                 await _mailLogs.InsertOneAsync(mailLog);
 
@@ -59,13 +59,13 @@ namespace API.Services
                 {
                     await smtp.SendMailAsync(mailMessage);
                     var filter = Builders<MailLogDto>.Filter.Eq(m => m.MessageId, mailLog.MessageId);
-                    var update = Builders<MailLogDto>.Update.Set(m => m.Status, "отправлено");
+                    var update = Builders<MailLogDto>.Update.Set(m => m.Status, "sended");
                     await _mailLogs.UpdateOneAsync(filter, update);
                 }
                 catch (Exception)
                 {
                     var filter = Builders<MailLogDto>.Filter.Eq(m => m.MessageId, mailLog.MessageId);
-                    var update = Builders<MailLogDto>.Update.Set(m => m.Status, "не удалось отправить");
+                    var update = Builders<MailLogDto>.Update.Set(m => m.Status, "don't sended");
                     await _mailLogs.UpdateOneAsync(filter, update);
                     return false;
                 }

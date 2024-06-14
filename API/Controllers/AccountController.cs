@@ -11,13 +11,14 @@ namespace API.Controllers
     public class AccountController : BaseApiController
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserRepository _userRepository;
         private readonly UserManager<AppUser> _userManager;
 
-        public AccountController(UserManager<AppUser> userManager, IUnitOfWork unitOfWork)
+        public AccountController(UserManager<AppUser> userManager, IUnitOfWork unitOfWork, IUserRepository userRepository)
         {
             _userManager = userManager;
             _unitOfWork = unitOfWork;
-
+            _userRepository = userRepository;
         }
 
         [HttpDelete("delete-profile")]
@@ -38,7 +39,7 @@ namespace API.Controllers
                 return Unauthorized("Invalid password.");
             }
 
-            var result = await _unitOfWork.UserRepository.DeleteProfile(userId);
+            var result = await _userRepository.DeleteProfile(userId);
 
             if (result)
             {

@@ -26,22 +26,22 @@ namespace API.Services
 
         public async Task<bool> UniqueContactPhoneExists(string username, string phone, string contactCreator)
         {
-            return await _dataContext.Contact.AnyAsync(x => x.Name == username && x.Phone == phone && x.CreatedBy == contactCreator);
+            return await _dataContext.Contact.AsNoTracking().AnyAsync(x => x.Name == username && x.Phone == phone && x.CreatedBy == contactCreator);
         }
 
         public async Task<bool> UniqueContactPhoneExists(int id, string phone, string contactCreator)
         {
-            return await _dataContext.Contact.AnyAsync(x => x.ContactId != id && x.Phone == phone && x.CreatedBy == contactCreator);
+            return await _dataContext.Contact.AsNoTracking().AnyAsync(x => x.ContactId != id && x.Phone == phone && x.CreatedBy == contactCreator);
         }
 
         public async Task<bool> UniqueContactEmailExists(string username, string email, string contactCreator)
         {
-            return await _dataContext.Contact.AnyAsync(x => x.Name == username && x.Email == email && x.CreatedBy == contactCreator);
+            return await _dataContext.Contact.AsNoTracking().AnyAsync(x => x.Name == username && x.Email == email && x.CreatedBy == contactCreator);
         }
 
         public async Task<bool> UniqueContactEmailExists(int id, string email, string contactCreator)
         {
-            return await _dataContext.Contact.AnyAsync(x => x.ContactId != id && x.Email == email && x.CreatedBy == contactCreator);
+            return await _dataContext.Contact.AsNoTracking().AnyAsync(x => x.ContactId != id && x.Email == email && x.CreatedBy == contactCreator);
         }
 
         public Task<Contact> CreateContact(NewContactDto contactDto)
@@ -53,7 +53,7 @@ namespace API.Services
 
         public async Task<IEnumerable<GetContactsDto>> GetMyContacts(string contactCreator)
         {
-            var result = await _dataContext.Contact.Where(x => x.CreatedBy == contactCreator)
+            var result = await _dataContext.Contact.AsNoTracking().Where(x => x.CreatedBy == contactCreator)
                                                    .Select(x => new GetContactsDto
                                                    {
                                                        Id = x.ContactId,
@@ -81,7 +81,7 @@ namespace API.Services
                                                        CreatedBy = x.CreatedBy,
                                                        CreatedAt = x.CreatedAt
                                                    })
-                                                   .OrderBy(x => x.Name)
+                                                   .OrderBy(x => x.Name).AsNoTracking()
                                                    .ToListAsync();
 
             return result;

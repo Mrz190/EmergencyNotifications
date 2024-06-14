@@ -6,7 +6,7 @@ namespace API.Dto
     public class MailLogDto
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)] // for optimisation work with id like strings
+        [BsonRepresentation(BsonType.ObjectId)]
         public string MessageId { get; set; }
 
         public string Recipient { get; set; }
