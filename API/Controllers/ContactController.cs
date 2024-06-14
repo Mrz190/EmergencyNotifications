@@ -5,6 +5,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace API.Controllers
@@ -13,19 +14,21 @@ namespace API.Controllers
     public class ContactController : BaseApiController
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IContactRepository _contactRepository;
         private readonly IMapper _mapper;
-        public ContactController(IMapper mapper, IUnitOfWork unitOfWork)
+        public ContactController(IMapper mapper, IUnitOfWork unitOfWork, IContactRepository contactRepository)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
+            _contactRepository = contactRepository;
         }
 
         [HttpPost("add-contact")]
         public async Task<ActionResult<Contact>> AddContact(NewContactDto contactDto)
         {
             var contactCreatorName = User.FindFirstValue(ClaimTypes.Name);
-            if (await _unitOfWork.ContactRepository.UniqueContactPhoneExists(contactDto.Name, contactDto.Phone, contactCreatorName)) return NotFound("Contact with this phone already exists");
-            if (await _unitOfWork.ContactRepository.UniqueContactPhoneExists(contactDto.Name, contactDto.Phone, contactCreatorName)) return NotFound("Contact with this email already exists");
+            if (await _contactRepository.UniqueContactPhoneExists(contactDto.Name, contactDto.Phone, contactCreatorName)) return NotFound("Contact with this phone already exists");
+            if (await _contactRepository.UniqueContactPhoneExists(contactDto.Name, contactDto.Phone, contactCreatorName)) return NotFound("Contact with this email already exists");
 
             var contactCreatorEmail = User.FindFirst(ClaimTypes.Email).ToString();
             var contactCreatorPhone_def = User.FindFirst("Phone").ToString();
@@ -35,7 +38,18 @@ namespace API.Controllers
             if (contactCreatorEmail == contactDto.Email) return BadRequest("Contact email same as your.");
             if (contactCreatorPhone == contactDto.Phone) return BadRequest("Phone number same as your.");
 
-            var contact = _unitOfWork.ContactRepository.CreateContact(contactDto);
+            var contact = _contactRepository.CreateContact(contactDto);
+
+            // Check for changes in the context
+            var changes = _unitOfWork.Context.ChangeTracker.Entries()
+                                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted)
+                                .ToList();
+
+            if (!changes.Any())
+            {
+                return BadRequest("No changes detected.");
+            }
+
             await _unitOfWork.CompleteAsync();
 
             return Ok(contact.Result);
@@ -45,14 +59,14 @@ namespace API.Controllers
         public async Task<IEnumerable<GetContactsDto>> GetMyContacts()
         {
             var contactCreator = User.FindFirstValue(ClaimTypes.Name);
-            return await _unitOfWork.ContactRepository.GetMyContacts(contactCreator);
+            return await _contactRepository.GetMyContacts(contactCreator);
         }
 
         [HttpGet("find-contact")]
         public async Task<IEnumerable<GetContactsDto>> GetContact(string name)
         {
             var contactCreator = User.FindFirstValue(ClaimTypes.Name);
-            return await _unitOfWork.ContactRepository.GetContactByName(name, contactCreator);
+            return await _contactRepository.GetContactByName(name, contactCreator);
         }
 
         [HttpPut("{id}")]
@@ -60,19 +74,19 @@ namespace API.Controllers
         {
             var contactCreator = User.FindFirstValue(ClaimTypes.Name);
 
-            var existingContact = await _unitOfWork.ContactRepository.GetContactByIdAsync(id);
+            var existingContact = await _contactRepository.GetContactByIdAsync(id);
             if (existingContact == null) return NotFound();
 
-            if (await _unitOfWork.ContactRepository.UniqueContactPhoneExists(id, updatedContact.Phone, contactCreator))
+            if (await _contactRepository.UniqueContactPhoneExists(id, updatedContact.Phone, contactCreator))
                 return BadRequest("A contact with such a phone already exists in your possession");
-            if (await _unitOfWork.ContactRepository.UniqueContactEmailExists(id, updatedContact.Email, contactCreator))
+            if (await _contactRepository.UniqueContactEmailExists(id, updatedContact.Email, contactCreator))
                 return BadRequest("A contact with such an email already exists in your possession");
 
             _mapper.Map(updatedContact, existingContact);
 
             try
             {
-                await _unitOfWork.ContactRepository.UpdateContactAsync(existingContact);
+                await _contactRepository.UpdateContactAsync(existingContact);
                 await _unitOfWork.CompleteAsync();
                 return NoContent();
             }
@@ -92,7 +106,7 @@ namespace API.Controllers
 
             var contactCreator = User.FindFirstValue(ClaimTypes.Name);
 
-            var existingContact = await _unitOfWork.ContactRepository.GetContactByIdAsync(id);
+            var existingContact = await _contactRepository.GetContactByIdAsync(id);
             if (existingContact == null) return NotFound();
 
             var contactToPatch = _mapper.Map<EditContactDto>(existingContact);
@@ -103,16 +117,16 @@ namespace API.Controllers
                 return ValidationProblem(ModelState);
             }
 
-            if (await _unitOfWork.ContactRepository.UniqueContactPhoneExists(id, contactToPatch.Phone, contactCreator))
+            if (await _contactRepository.UniqueContactPhoneExists(id, contactToPatch.Phone, contactCreator))
                 return BadRequest("A contact with such a phone already exists in your possession");
-            if (await _unitOfWork.ContactRepository.UniqueContactEmailExists(id, contactToPatch.Email, contactCreator))
+            if (await _contactRepository.UniqueContactEmailExists(id, contactToPatch.Email, contactCreator))
                 return BadRequest("A contact with such an email already exists in your possession");
 
             _mapper.Map(contactToPatch, existingContact);
 
             try
             {
-                await _unitOfWork.ContactRepository.UpdateContactAsync(existingContact);
+                await _contactRepository.UpdateContactAsync(existingContact);
                 await _unitOfWork.CompleteAsync();
                 return Ok(existingContact);
             }
@@ -127,7 +141,7 @@ namespace API.Controllers
         {
             var contactCreator = User.FindFirstValue(ClaimTypes.Name);
 
-            if (await _unitOfWork.ContactRepository.DeleteContactAsync(id, contactCreator) == false)
+            if (await _contactRepository.DeleteContactAsync(id, contactCreator) == false)
                 return BadRequest();
             await _unitOfWork.CompleteAsync();
             return Ok("Contact deleted");

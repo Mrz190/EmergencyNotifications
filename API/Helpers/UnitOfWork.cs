@@ -1,31 +1,30 @@
 ﻿using API.Data;
-using API.Entity;
 using API.Interfaces;
-using API.Services;
-using AutoMapper;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Helpers
 {
     public class UnitOfWork : IUnitOfWork
     {
         private readonly DataContext _context;
-        private readonly IMapper _mapper;
-        private readonly UserManager<AppUser> _userManager;
 
-        public UnitOfWork(DataContext context, IMapper mapper, UserManager<AppUser> userManager)
+        public UnitOfWork(DataContext context)
         {
             _context = context;
-            _mapper = mapper;
-            _userManager = userManager;
         }
+        public DbContext Context => _context;
 
-        public IUserRepository UserRepository => new UserRepository(_context, _mapper, _userManager);
-        public IContactRepository ContactRepository => new ContactRepository(_context, _mapper);
-
-        public async Task<bool> CompleteAsync()
+        public async Task<int> CompleteAsync()
         {
-            return await _context.SaveChangesAsync() > 0;
+            try
+            {
+                return await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as per your application's requirements
+                throw new Exception("An error occurred while saving changes.", ex);
+            }
         }
 
         public void Dispose()
