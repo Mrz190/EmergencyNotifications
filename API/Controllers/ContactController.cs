@@ -87,8 +87,18 @@ namespace API.Controllers
             try
             {
                 await _contactRepository.UpdateContactAsync(existingContact);
+
+                var changes = _unitOfWork.Context.ChangeTracker.Entries()
+                                    .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted)
+                                    .ToList();
+
+                if (!changes.Any())
+                {
+                    return BadRequest("No changes detected.");
+                }
                 await _unitOfWork.CompleteAsync();
-                return NoContent();
+
+                return Ok("Object was edited.");
             }
             catch
             {
@@ -127,7 +137,16 @@ namespace API.Controllers
             try
             {
                 await _contactRepository.UpdateContactAsync(existingContact);
+                var changes = _unitOfWork.Context.ChangeTracker.Entries()
+                                    .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted)
+                                    .ToList();
+
+                if (!changes.Any())
+                {
+                    return BadRequest("No changes detected.");
+                }
                 await _unitOfWork.CompleteAsync();
+
                 return Ok(existingContact);
             }
             catch
@@ -141,10 +160,19 @@ namespace API.Controllers
         {
             var contactCreator = User.FindFirstValue(ClaimTypes.Name);
 
-            if (await _contactRepository.DeleteContactAsync(id, contactCreator) == false)
-                return BadRequest();
+            if (await _contactRepository.DeleteContactAsync(id, contactCreator) == false) return BadRequest();
+
+            var changes = _unitOfWork.Context.ChangeTracker.Entries()
+                                    .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted)
+                                    .ToList();
+
+            if (!changes.Any())
+            {
+                return BadRequest("No changes detected.");
+            }
             await _unitOfWork.CompleteAsync();
-            return Ok("Contact deleted");
+
+            return Ok("Contact deleted.");
         }
     }
 }
