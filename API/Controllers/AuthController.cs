@@ -87,20 +87,6 @@ namespace API.Controllers
             };
         }
 
-        [HttpGet("all")]
-        public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers()
-        {
-            var result = await _userRepository.GetUsersAsync();
-            return Ok(result);
-        }
-
-        [HttpDelete("all")]
-        public async Task DropThemAll()
-        {
-            var users = await _userManager.Users.ToListAsync();
-            foreach (var user in users) await _userManager.DeleteAsync(user);
-        }
-
         private async Task<bool> UserExists(string username)
         {
             return await _userManager.Users.AnyAsync(x => x.UserName == username.ToLower() && x.IsActive);
