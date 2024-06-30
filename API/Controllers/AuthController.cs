@@ -15,20 +15,16 @@ namespace API.Controllers
         private readonly IMapper _mapper;
         private readonly ITokenService _token;
         private readonly IUserRepository _userRepository;
+        private readonly IRedisService _cache;
 
-        public AuthController(UserManager<AppUser> userManager, IMapper mapper, ITokenService token, IUnitOfWork unitOfWork, IUserRepository userRepository)
+        public AuthController(UserManager<AppUser> userManager, IMapper mapper, ITokenService token, IUnitOfWork unitOfWork, IUserRepository userRepository, IRedisService cache)
         {
             _userManager = userManager;
             _mapper = mapper;
             _token = token;
             _unitOfWork = unitOfWork;
             _userRepository = userRepository;
-        }
-
-        [HttpGet]
-        public IActionResult Get()
-        {
-            throw new Exception("This is an example exception.");
+            _cache = cache;
         }
 
         [HttpPost("reg")]
@@ -53,13 +49,18 @@ namespace API.Controllers
                     if (!roleResult.Succeeded) throw new Exception("Failed to assign role.");
                 }
 
+                string token = await _token.CreateToken(user);
+
+                var cacheKey = $"jwt-{user.UserName}";
+                await _cache.SetTokenAsync(cacheKey, token);
+
                 return new UserDto
                 {
                     UserName = user.UserName,
                     City = user.City,
                     Country = user.Country,
                     UserEmail = user.Email,
-                    Token = await _token.CreateToken(user)
+                    Token = token
                 };
             }
             catch (Exception ex)
@@ -77,14 +78,26 @@ namespace API.Controllers
             var result = await _userManager.CheckPasswordAsync(user, loginDto.Password);
             if (!result) return BadRequest("Invalid username/password.");
 
+            string token = await _token.CreateToken(user);
+            string cacheKey = $"jwt-{user.UserName}";
+            await _cache.SetTokenAsync(cacheKey, token);
+
             return new UserDto
             {
                 UserName = user.UserName,
                 City = user.City,
                 Country = user.Country,
                 UserEmail = user.Email,
-                Token = await _token.CreateToken(user)
+                Token = token
             };
+        }
+
+        [HttpPost("logout")]
+        public async Task<ActionResult> Logout(LogoutDto logoutDto)
+        {
+            string cacheKey = $"jwt-{logoutDto.UserName}";
+            await _cache.RemoveTokenAsync(cacheKey);
+            return Ok();
         }
 
         private async Task<bool> UserExists(string username)

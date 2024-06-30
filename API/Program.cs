@@ -6,8 +6,6 @@ using API.Interfaces;
 using API.Middleware;
 using API.Services;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Serialization;
 using Serilog;
 
@@ -27,55 +25,18 @@ builder.Services.AddControllers().AddNewtonsoftJson(options =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token in the text input below.\r\n\r\nExample: Bearer 1safsfsdfdfd"
-    });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement {
-        {
-            new OpenApiSecurityScheme {
-                Reference = new OpenApiReference {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Example Api",
-        Version = "v1",
-        Description = "Description example",
-        Contact = new OpenApiContact
-        {
-            Name = "Example contact",
-            Email = "example@gmail.com",
-            Url = new Uri("https://example.com/contact")
-        }
-    });
-});
+builder.Services.AddSwaggerExtension(builder.Configuration);
 
 builder.Services.AddIdentityServices(builder.Configuration);
 
-builder.Services.AddDbContext<DataContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DbConnection"));
-});
+builder.Services.ConnectMongo(builder.Configuration);
+builder.Services.ConnectSqlServer(builder.Configuration);
 
-builder.Services.AddSingleton<MongoDbContext>(serviceProvider =>
+builder.Services.AddControllers();
+
+builder.Services.AddStackExchangeRedisCache(options =>
 {
-    var mongoSettings = builder.Configuration.GetSection("MongoSettings");
-    var connectionsStrings = mongoSettings.GetValue<string>("ConnectionString");
-    var databaseName = mongoSettings.GetValue<string>("DatabaseName");
-    return new MongoDbContext(connectionsStrings, databaseName);
+    options.Configuration = builder.Configuration.GetSection("Redis").GetValue<string>("ConnectionString");
 });
 
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
@@ -84,13 +45,14 @@ builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddSingleton<IRedisService, RedisService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-builder.Services.AddControllers();
 builder.Services.AddLogging();
 
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<JwtMiddleware>();
 
 app.UseCors(builder => builder
     .AllowAnyHeader()
