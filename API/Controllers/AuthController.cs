@@ -2,14 +2,17 @@
 using API.Entity;
 using API.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace API.Controllers
 {
     public class AuthController : BaseApiController
     {
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<AppUser> _userManager;
         private readonly IMapper _mapper;
@@ -17,7 +20,7 @@ namespace API.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IRedisService _cache;
 
-        public AuthController(UserManager<AppUser> userManager, IMapper mapper, ITokenService token, IUnitOfWork unitOfWork, IUserRepository userRepository, IRedisService cache)
+        public AuthController(UserManager<AppUser> userManager, IMapper mapper, ITokenService token, IUnitOfWork unitOfWork, IUserRepository userRepository, IRedisService cache, IHttpContextAccessor httpContextAccessor)
         {
             _userManager = userManager;
             _mapper = mapper;
@@ -25,6 +28,7 @@ namespace API.Controllers
             _unitOfWork = unitOfWork;
             _userRepository = userRepository;
             _cache = cache;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         [HttpPost("reg")]
@@ -92,12 +96,23 @@ namespace API.Controllers
             };
         }
 
-        [HttpPost("logout")]
-        public async Task<ActionResult> Logout(LogoutDto logoutDto)
+        [Authorize]
+        [HttpGet("logout")]
+        public async Task<ActionResult> Logout()
         {
-            string cacheKey = $"jwt-{logoutDto.UserName}";
-            await _cache.RemoveTokenAsync(cacheKey);
-            return Ok();
+            var token = _httpContextAccessor.HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            if(token != null)
+            {
+                string name = GetUserNameFromToken(token);
+
+                string cacheKey = $"jwt-{name}";
+                await _cache.RemoveTokenAsync(cacheKey);
+                return Ok("Bye :>");
+            }
+            else
+            {
+                return BadRequest();
+            }
         }
 
         private async Task<bool> UserExists(string username)
@@ -108,6 +123,13 @@ namespace API.Controllers
         private async Task<bool> EmailExist(string email)
         {
             return await _userManager.Users.AnyAsync(x => x.Email == email && x.IsActive);
+        }
+        private string GetUserNameFromToken(string token)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
+            var username = jwtToken?.Claims.First(claim => claim.Type == "unique_name").Value;
+            return username;
         }
     }
 }

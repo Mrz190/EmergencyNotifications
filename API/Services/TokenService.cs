@@ -39,7 +39,7 @@ namespace API.Services
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddDays(10), // Используем UTC для консистентности
+                Expires = DateTime.UtcNow.AddDays(10),
                 SigningCredentials = creds
             };
 

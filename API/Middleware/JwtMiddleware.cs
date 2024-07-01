@@ -16,7 +16,7 @@ namespace API.Middleware
         
         public async Task Invoke(HttpContext context) 
         {
-            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last(); // ПРОВЕРИТЬ Invoke
+            var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
             if (token != null)
             {
@@ -30,7 +30,7 @@ namespace API.Middleware
                         if (cachedToken != token)
                         {
                             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                            await context.Response.WriteAsync("Unauthorized");
+                            await context.Response.WriteAsync("Unauthorized.");
                             return;
                         }
                     }

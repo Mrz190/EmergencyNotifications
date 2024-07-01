@@ -15,7 +15,7 @@ namespace API.Services
         {
             var options = new DistributedCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = expiry ?? TimeSpan.FromHours(1)
+                AbsoluteExpirationRelativeToNow = expiry ?? TimeSpan.FromDays(7)
             };
 
             await _cache.SetStringAsync(key, token, options);

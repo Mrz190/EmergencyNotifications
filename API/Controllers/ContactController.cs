@@ -27,8 +27,8 @@ namespace API.Controllers
         public async Task<ActionResult<Contact>> AddContact(NewContactDto contactDto)
         {
             var contactCreatorName = User.FindFirstValue(ClaimTypes.Name);
-            if (await _contactRepository.UniqueContactPhoneExists(contactDto.Name, contactDto.Phone, contactCreatorName)) return NotFound("Contact with this phone already exists");
-            if (await _contactRepository.UniqueContactPhoneExists(contactDto.Name, contactDto.Phone, contactCreatorName)) return NotFound("Contact with this email already exists");
+            if (await _contactRepository.UniqueContactPhoneExists(contactDto.Name, contactDto.Phone, contactCreatorName)) return NotFound("Contact with this phone already exists.");
+            if (await _contactRepository.UniqueContactPhoneExists(contactDto.Name, contactDto.Phone, contactCreatorName)) return NotFound("Contact with this email already exists.");
 
             var contactCreatorEmail = User.FindFirst(ClaimTypes.Email).ToString();
             var contactCreatorPhone_def = User.FindFirst("Phone").ToString();
@@ -102,7 +102,7 @@ namespace API.Controllers
             }
             catch
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Произошла ошибка при обновлении контакта");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the contact.");
             }
         }
 
@@ -111,7 +111,7 @@ namespace API.Controllers
         {
             if (patchDoc == null)
             {
-                return BadRequest("Invalid patch document");
+                return BadRequest("Invalid patch document.");
             }
 
             var contactCreator = User.FindFirstValue(ClaimTypes.Name);
@@ -128,9 +128,9 @@ namespace API.Controllers
             }
 
             if (await _contactRepository.UniqueContactPhoneExists(id, contactToPatch.Phone, contactCreator))
-                return BadRequest("A contact with such a phone already exists in your possession");
+                return BadRequest("A contact with such a phone already exists in your possession.");
             if (await _contactRepository.UniqueContactEmailExists(id, contactToPatch.Email, contactCreator))
-                return BadRequest("A contact with such an email already exists in your possession");
+                return BadRequest("A contact with such an email already exists in your possession.");
 
             _mapper.Map(contactToPatch, existingContact);
 
@@ -151,7 +151,7 @@ namespace API.Controllers
             }
             catch
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the contact");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while updating the contact.");
             }
         }
 

@@ -48,6 +48,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<IRedisService, RedisService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddLogging();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -95,12 +96,19 @@ using (var scope = app.Services.CreateScope())
         {
             await roleManager.CreateAsync(new AppRole { Name = "Admin" });
         }
-        Console.WriteLine("Application started.");
+
+        Console.BackgroundColor = ConsoleColor.DarkGreen;
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine(" Application started. ");
+        Console.ResetColor();
     }
     catch (Exception ex)
     {
         var logger = services.GetService<ILogger<Program>>();
+        Console.BackgroundColor = ConsoleColor.Red;
+        Console.ForegroundColor = ConsoleColor.White;
         logger.LogError(ex, "An error occurred while seeding the database.");
+        Console.ResetColor();
     }
 }
 
