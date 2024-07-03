@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace API.Controllers
 {
@@ -27,8 +28,12 @@ namespace API.Controllers
         public async Task<ActionResult<Contact>> AddContact(NewContactDto contactDto)
         {
             var contactCreatorName = User.FindFirstValue(ClaimTypes.Name);
+            
+            if (contactDto.Phone.Any(c => !char.IsDigit(c) && c != '+')) return BadRequest("Phone can contains only digits.");
+            if (!isEmailValid(contactDto.Email)) return BadRequest("Incorrect email.");
+
             if (await _contactRepository.UniqueContactPhoneExists(contactDto.Name, contactDto.Phone, contactCreatorName)) return NotFound("Contact with this phone already exists.");
-            if (await _contactRepository.UniqueContactPhoneExists(contactDto.Name, contactDto.Phone, contactCreatorName)) return NotFound("Contact with this email already exists.");
+            if (await _contactRepository.UniqueContactEmailExists(contactDto.Name, contactDto.Email, contactCreatorName)) return NotFound("Contact with this email already exists.");
 
             var contactCreatorEmail = User.FindFirst(ClaimTypes.Email).ToString();
             var contactCreatorPhone_def = User.FindFirst("Phone").ToString();
@@ -173,6 +178,13 @@ namespace API.Controllers
             await _unitOfWork.CompleteAsync();
 
             return Ok("Contact deleted.");
+        }
+
+        private bool isEmailValid(string email)
+        {
+            string pattern = "[.\\-_a-z0-9]+@([a-z0-9][\\-a-z0-9]+\\.)+[a-z]{2,6}";
+            Match isMatch = Regex.Match(email, pattern, RegexOptions.IgnoreCase);
+            return isMatch.Success;
         }
     }
 }

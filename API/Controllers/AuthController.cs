@@ -96,6 +96,40 @@ namespace API.Controllers
             };
         }
 
+        [HttpPost("validate-jwt")]
+        public async Task<ActionResult<UserDto>> ValidateJWT()
+        {
+            var jwtToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+
+            if (jwtToken != null)
+            {
+                string userName = GetUserNameFromToken(jwtToken);
+
+                var cacheToken = await _cache.GetTokenAsync($"jwt-{userName}");
+
+                if (cacheToken != null)
+                {
+                    var user = await _userManager.Users.SingleOrDefaultAsync(n => n.UserName == userName && n.IsActive);
+
+                    return new UserDto 
+                    {
+                        UserName = user.UserName,
+                        City = user.City,
+                        Country = user.Country,
+                        UserEmail = user.Email,
+                        Token = jwtToken
+                    };
+                }
+                else
+                {
+                    return BadRequest();
+                }
+            }else
+            {
+                return BadRequest();
+            }
+        }
+
         [Authorize]
         [HttpGet("logout")]
         public async Task<ActionResult> Logout()

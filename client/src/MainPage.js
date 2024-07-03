@@ -1,0 +1,222 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+const MainPage = () => {
+  const [credentials, setCredentials] = useState({
+    Name: '',
+    Phone: '',
+    Email: '',
+    CreatedAt: '',
+    CreatedBy: ''
+  });
+
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [contacts, setContacts] = useState([]);
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setCredentials({ ...credentials, [name]: value });
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('Token');
+    if (token) {
+      fetch('http://localhost:5041/api/Auth/validate-jwt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+      })
+        .then(response => {
+          if (!response.ok) {
+            navigate('/');
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('Token');
+          navigate('/');
+        });
+    } else {
+      navigate('/');
+    }
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('Token');
+    if (token) {
+      const fetchContacts = () => {
+        fetch('http://localhost:5041/api/Contact/contacts-list', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+        })
+          .then(response => response.json())
+          .then(data => {
+            setContacts(data);
+          })
+          .catch(error => {
+            console.error('There was an error fetching the contacts!', error);
+          });
+      };
+
+      fetchContacts();
+      const intervalId = setInterval(fetchContacts, 1000);
+
+      return () => clearInterval(intervalId);
+    }
+  }, []);
+
+  const delAction = (id) => {
+    const token = localStorage.getItem('Token');
+    if (token) {
+      fetch(`http://localhost:5041/api/Contact/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        setContacts(contacts.filter(contact => contact.id !== id));
+
+        setSuccess('Contact deleted successfully');
+        setError('');
+        setTimeout(() => {
+          setSuccess('');
+        }, 4500);
+      })
+      .catch(error => {
+        console.error('There was an error deleting the contact!', error);
+      });
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('Token');
+    if (token) {
+      fetch('http://localhost:5041/api/Contact/add-contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(credentials),
+      })
+        .then(response => {
+          if (!response.ok) {
+            if (response.status === 400 || response.status === 404) {
+              setError('Contact with these credentials already exists.');
+            }
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(() => {
+          setSuccess('Contact added successfully!');
+          setError('');
+          setTimeout(() => {
+            setSuccess('');
+          }, 4500);
+          fetch('http://localhost:5041/api/Contact/get-contacts', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+          })
+            .then(response => response.json())
+            .then(data => {
+              console.log("Fetched contacts after adding new one:", data);
+              setContacts(data);
+            })
+            .catch(error => {
+              console.error('There was an error fetching the contacts!', error);
+            });
+        })
+        .catch(error => {
+          console.error('There was an error submitting the credentials!', error);
+          setError('There was an error submitting the credentials!');
+          setSuccess('');
+          setTimeout(() => {
+            setError('');
+          }, 4500);
+        });
+    }
+  };
+
+  return (
+    <div>
+      <header>
+        <h1 className="header_name">Emergency Notification</h1>
+        {error && <div className="error_label_add">{error}</div>}
+        {success && <div className="success_label_add">{success}</div>}
+      </header>
+      <div className="main_container">
+        <div className="add_contacts_field">
+          <span>A<br/>D<br/>D<br/><br/>C<br/>O<br/>N<br/>T<br/>A<br/>C<br/>T<br/></span>
+          <div className="hidden_add_block">
+            <h2>ADD NEW CONTACT</h2>  
+            <form onSubmit={handleSubmit} className="add_contact_form">
+              <input className="input_contact _contact_name" autoComplete="off" placeholder="Name:" type="text" name="Name" value={credentials.Name} onChange={handleChange} required/>
+              <input className="input_contact _contact_phone" autoComplete="off" placeholder="Phone:" type="text" name="Phone" value={credentials.Phone} onChange={handleChange} required/>
+              <input className="input_contact _contact_email" autoComplete="off" placeholder="Email:" type="email" name="Email" value={credentials.Email} onChange={handleChange} required/>
+              <button className="btn_create_contact">Create contact</button>
+            </form>
+          </div>  
+        </div>
+        <div className="wrapper_notify_btn_1">
+          <div className="wrapper_notify_btn_2">
+            <div className="wrapper_notify_btn_3">
+              <div className="wrapper_notify_btn_4">
+                <button className="pull_send_notoficate-pushable" role="button" type="submit">
+                  <span className="pull_send_notoficate-shadow"></span>
+                  <span className="pull_send_notoficate-edge"></span>
+                  <span className="pull_send_notoficate-front text">NOTIFY</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="edit_contacts_field">
+          <span>C<br/>O<br/>N<br/>T<br/>A<br/>C<br/>T<br/>S<br/></span>
+          <div className="hidden_edit_block">
+            <h2>MY CONTACTS</h2>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {contacts.map(contact => (
+                  <tr key={contact.Id}>
+                    <td>{contact.Name}</td>
+                    <td>{contact.Phone}</td>
+                    <td>{contact.Email}</td>
+                    <td>
+                      <button className="btn_del_contact" type="button" onClick={() => delAction(contact.Id)}>Del</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MainPage;
