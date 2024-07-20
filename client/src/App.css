@@ -246,6 +246,7 @@ header {
   font-weight: bold;
   opacity: 0;
   animation: 4.5s ease-in-out forwards ErrorAppearance_;
+  z-index: 1001;
 }
 
 @keyframes ErrorAppearance_ {
@@ -273,6 +274,7 @@ header {
   font-weight: bold;
   opacity: 0;
   animation: 4.5s ease-in-out forwards SuccessAppearance_;
+  z-index: 1001;
 }
 
 @keyframes SuccessAppearance_ {

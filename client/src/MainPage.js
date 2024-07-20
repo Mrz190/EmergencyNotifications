@@ -17,6 +17,8 @@ const MainPage = () => {
   const [contacts, setContacts] = useState([]);
   const [isNotifyOpen, setIsNotifyOpen] = useState(false);
   const [isContactSelectionVisible, setIsContactSelectionVisible] = useState(false);
+  const [notificationMessageBody, setNotificationMessageBody] = useState('');
+  const [selectedContacts, setSelectedContacts] = useState([]);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -117,10 +119,61 @@ const MainPage = () => {
     setIsContactSelectionVisible(false);
   };
 
-  const NotifyUsers = () => {
-    debugger
-    console.log("notify");
-  }
+  const handleMessageBodyChange = (e) => {
+    setNotificationMessageBody(e.target.value);
+  };
+
+  const handleContactSelection = (e) => {
+    const { value, checked } = e.target;
+    setSelectedContacts((prevSelectedContacts) => 
+      checked ? [...prevSelectedContacts, value] : prevSelectedContacts.filter((id) => id !== value)
+    );
+  };
+
+  const NotifyUsers = (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('Token');
+    if (token) {
+      const recipients = contacts
+        .filter(contact => selectedContacts.includes(contact.Id.toString()))
+        .map(contact => ({ id: contact.Id, mail: contact.Email }));
+      
+      const payload = {
+        mailMessage: {
+          subject: `Emergency Notification From`,
+          messageBody: notificationMessageBody
+        },
+        recipients
+      };
+
+      fetch(`${config.apiBaseUrl}/api/Email/send-mail`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload),
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          setSuccess('Notification sent successfully!');
+          setError('');
+          setTimeout(() => {
+            setSuccess('');
+          }, 4500);
+        })
+        .catch(error => {
+          console.error('There was an error sending the notification!', error);
+          setError('There was an error sending the notification!');
+          setSuccess('');
+          setTimeout(() => {
+            setError('');
+          }, 4500);
+        });
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -158,7 +211,6 @@ const MainPage = () => {
           })
             .then(response => response.json())
             .then(data => {
-              console.log("Fetched contacts after adding new one:", data);
               setContacts(data);
             })
             .catch(error => {
@@ -243,7 +295,7 @@ const MainPage = () => {
         className={`contact_list_wrapper ${isNotifyOpen ? 'show' : ''}`}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="contact_list_field">
+        {/* <div className="contact_list_field">
           <h1>NOTIFY USERS</h1><br />
           <form onSubmit={NotifyUsers} className="notify_form">
             <div className="message_area_notify">
@@ -255,6 +307,44 @@ const MainPage = () => {
                 {contacts.map(contact => (
                   <div key={contact.Id} className="checkbox-contacts">
                     <input type="checkbox" id={`contact-${contact.Id}`} name="notifyContacts" value={contact.Id} />
+                    <label htmlFor={`contact-${contact.Id}`}>
+                      <span></span>{contact.Name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <button type="submit" className="btn_send_notification">NOTIFY</button>
+            </div>
+          </form>
+          <button className="notify_btn_close" onClick={handleNotifyButtonClick}>Close</button>
+        </div>
+         */}
+
+
+
+        <div className="contact_list_field">
+          <h1>NOTIFY USERS</h1><br />
+          <form onSubmit={NotifyUsers} className="notify_form">
+            <div className="message_area_notify">
+              <textarea 
+                placeholder="Type message notification:" 
+                className="textarea_notify_message" 
+                value={notificationMessageBody}
+                onChange={handleMessageBodyChange}
+              ></textarea>
+            </div>
+            <div className="contacts_area_notify">
+              <h2>WHO TO NOTIFY?</h2>
+              <div className="contacts_selection">
+                {contacts.map(contact => (
+                  <div key={contact.Id} className="checkbox-contacts">
+                    <input 
+                      type="checkbox" 
+                      id={`contact-${contact.Id}`} 
+                      name="notifyContacts" 
+                      value={contact.Id} 
+                      onChange={handleContactSelection} 
+                    />
                     <label htmlFor={`contact-${contact.Id}`}>
                       <span></span>{contact.Name}
                     </label>
