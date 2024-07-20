@@ -5,12 +5,19 @@
 
 body {
   background-color: #36383f;
-  height: 100vh;  
+  height: 100vh;
+  overflow-y: hidden;
+  overflow-x: hidden !important;
+}
+
+input,
+textarea {
+  outline: none;
 }
 
 .auth_wrapper {
   background-color: #282c34;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -39,12 +46,14 @@ body {
 @keyframes ErrorAppearance {
   5% {
     opacity: 1;
-    top:50px;
+    top: 50px;
   }
+
   90% {
     opacity: 1;
     top: 50px;
   }
+
   100% {
     opacity: 0;
     top: 0px;
@@ -59,7 +68,6 @@ body {
   display: block;
   margin: auto;
   margin-top: 15px;
-  outline:none;
   background: transparent;
   border: none;
   border-bottom: 3px solid #ff0042;
@@ -99,9 +107,7 @@ body {
   will-change: transform;
   transform: translateY(2px);
   transition:
-    transform
-    600ms
-    cubic-bezier(.3, .7, .4, 1);
+    transform 600ms cubic-bezier(.3, .7, .4, 1);
 }
 
 .button-82-edge {
@@ -111,13 +117,11 @@ body {
   width: 100%;
   height: 100%;
   border-radius: 12px;
-  background: linear-gradient(
-    to left,
-    hsl(340deg 100% 16%) 0%,
-    hsl(340deg 100% 32%) 8%,
-    hsl(340deg 100% 32%) 92%,
-    hsl(340deg 100% 16%) 100%
-  );
+  background: linear-gradient(to left,
+      hsl(340deg 100% 16%) 0%,
+      hsl(340deg 100% 32%) 8%,
+      hsl(340deg 100% 32%) 92%,
+      hsl(340deg 100% 16%) 100%);
 }
 
 .button-82-front {
@@ -131,16 +135,7 @@ body {
   will-change: transform;
   transform: translateY(-4px);
   transition:
-    transform
-    600ms
-    cubic-bezier(.3, .7, .4, 1);
-}
-
-@media (min-width: 768px) {
-  .button-82-front {
-    font-size: 1.25rem;
-    padding: 12px 42px;
-  }
+    transform 600ms cubic-bezier(.3, .7, .4, 1);
 }
 
 .button-82-pushable:hover {
@@ -151,9 +146,7 @@ body {
 .button-82-pushable:hover .button-82-front {
   transform: translateY(-6px);
   transition:
-    transform
-    250ms
-    cubic-bezier(.3, .8, .4, 1.5);
+    transform 250ms cubic-bezier(.3, .8, .4, 1.5);
 }
 
 .button-82-pushable:active .button-82-front {
@@ -164,9 +157,7 @@ body {
 .button-82-pushable:hover .button-82-shadow {
   transform: translateY(2px);
   transition:
-    transform
-    250ms
-    cubic-bezier(.3, .7, .4, 1.5);
+    transform 250ms cubic-bezier(.3, .7, .4, 1.5);
 }
 
 .button-82-pushable:active .button-82-shadow {
@@ -194,7 +185,7 @@ header {
 }
 
 .main_container {
-  height: 90vh;
+  height: 83vh;
   position: relative;
   display: flex;
   justify-content: space-between;
@@ -261,9 +252,11 @@ header {
   5% {
     opacity: 1;
   }
+
   90% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
@@ -286,9 +279,11 @@ header {
   5% {
     opacity: 1;
   }
+
   90% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
@@ -303,7 +298,7 @@ header {
   opacity: 0;
 }
 
-.add_contacts_field:hover .hidden_add_block{
+.add_contacts_field:hover .hidden_add_block {
   opacity: 1;
 }
 
@@ -332,7 +327,6 @@ header {
   padding: 8px;
   padding-left: 10px;
   padding-right: 15px;
-  outline:none;
   color: #fff;
   font-size: 16px;
 }
@@ -369,24 +363,25 @@ header {
 }
 
 .table {
-	width: 100%;
+  width: 100%;
   margin-top: 20px;
-	margin-bottom: 20px;
-	border-collapse: collapse; 
+  margin-bottom: 20px;
+  border-collapse: collapse;
 }
+
 .table th {
-	font-weight: bold;
-	padding: 5px;
-	background: #96032a;
-	border: none;
+  font-weight: bold;
+  padding: 5px;
+  background: #96032a;
+  border: none;
   text-align: center;
 }
 
 .table td {
   text-align: center;
-	padding: 5px;
-	border: none;
-  border-bottom: 2px solid #fff;  
+  padding: 5px;
+  border: none;
+  border-bottom: 2px solid #fff;
 }
 
 .edit_contacts_field {
@@ -410,14 +405,25 @@ header {
 }
 
 .btn_del_contact {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+  width: 30px;
+  height: 30px;
   font-size: 17px;
-  padding: 8px;
+  padding: 5px;
   border: none;
   border-radius: 5px;
   background-color: #96032a;
   color: #fff;
   cursor: pointer;
   transition: 0.2s;
+}
+
+.btn_del_contact svg {
+  width: 15px;
+  height: 15px;
 }
 
 .btn_del_contact:hover {
@@ -443,7 +449,7 @@ header {
   font-size: 23pt;
 }
 
-.edit_contacts_field:hover .hidden_edit_block{
+.edit_contacts_field:hover .hidden_edit_block {
   opacity: 1;
 }
 
@@ -473,6 +479,7 @@ header {
     width: 415px;
     height: 415px;
   }
+
   100% {
     width: 400px;
     height: 400px;
@@ -497,6 +504,7 @@ header {
     width: 380px;
     height: 380px;
   }
+
   100% {
     width: 365px;
     height: 365px;
@@ -521,6 +529,7 @@ header {
     width: 335px;
     height: 335px;
   }
+
   100% {
     width: 320px;
     height: 320px;
@@ -545,6 +554,7 @@ header {
     width: 295px;
     height: 295px;
   }
+
   100% {
     width: 280px;
     height: 280px;
@@ -565,9 +575,12 @@ header {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 230px; /* Устанавливаем ширину */
-  height: 230px; /* Устанавливаем высоту */
-  border-radius: 50%; /* Делаем кнопку круглой */
+  width: 230px;
+  /* Устанавливаем ширину */
+  height: 230px;
+  /* Устанавливаем высоту */
+  border-radius: 50%;
+  /* Делаем кнопку круглой */
 }
 
 .pull_send_notoficate-shadow {
@@ -576,11 +589,14 @@ header {
   left: 0;
   width: 100%;
   height: 103%;
-  border-radius: 50%; /* Делаем тень круглой */
-  background: hsl(0deg 0% 0% / 0.5); /* Увеличиваем непрозрачность тени */
+  border-radius: 50%;
+  /* Делаем тень круглой */
+  background: hsl(0deg 0% 0% / 0.5);
+  /* Увеличиваем непрозрачность тени */
   filter: blur(2px);
   will-change: transform;
-  transform: translateY(4px); /* Увеличиваем смещение тени */
+  transform: translateY(4px);
+  /* Увеличиваем смещение тени */
   transition: transform 600ms cubic-bezier(.3, .7, .4, 1);
 }
 
@@ -590,14 +606,13 @@ header {
   left: 0;
   width: 100%;
   height: 102%;
-  border-radius: 50%; /* Делаем край круглым */
-  background: linear-gradient(
-    to left,
-    hsl(340, 100%, 12%) 0%,
-    hsl(340, 98%, 23%) 8%,
-    hsl(340, 98%, 24%) 92%,
-    hsl(340, 100%, 13%) 100%
-  );
+  border-radius: 50%;
+  /* Делаем край круглым */
+  background: linear-gradient(to left,
+      hsl(340, 100%, 12%) 0%,
+      hsl(340, 98%, 23%) 8%,
+      hsl(340, 98%, 24%) 92%,
+      hsl(340, 100%, 13%) 100%);
 }
 
 .pull_send_notoficate-front {
@@ -617,12 +632,6 @@ header {
   align-items: center;
   font-size: 34px;
   font-weight: bold;
-}
-
-@media (min-width: 768px) {
-  .pull_send_notoficate-front {
-    font-size: 35px;
-  }
 }
 
 .pull_send_notoficate-pushable:hover {
@@ -663,4 +672,247 @@ header {
 
 .pull_send_notoficate-pushable:focus:not(:focus-visible) {
   outline: none;
+}
+
+.contact_list_wrapper {
+  position: fixed;
+  width: 800px;
+  height: 95vh;
+  background-color: #333333;
+  border: 4px solid #b42227;
+  border-radius: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: top 0.25s ease, transform 0.25вs ease;
+  top: 100vh;
+  left: 50%;
+  color: #ffffff;
+  transform: translate(-50%, 0);
+  z-index: 1000;
+}
+
+.contact_list_wrapper.show {
+  top: 60%;
+  transform: translate(-50%, -50%);
+}
+.contact_list_field {
+  position: relative;
+  height: 95%;
+  padding: 20px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+}
+
+.contact_list_field h1 {
+  position: absolute;
+  top: 15px;
+  width: 100%;
+  margin: 0;
+}
+
+.message_area_notify {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+}
+
+.notify_form {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.textarea_notify_message {
+  width: 90%;
+  min-height: 150px;
+  margin-top: 20px;
+  resize: none;
+  padding: 8px;
+  background: transparent;
+  color: #ffffff;
+  border: 3px solid #ff0042;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+.textarea_notify_message:focus {
+  border-color: #ffffff;
+}
+
+.contacts_area_notify {
+  margin-top: 20px;
+  width: 100%;
+}
+
+.contacts_area_notify h2 {
+  margin-bottom: 10px;
+}
+
+.contacts_selection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  padding: 10px;
+  max-width: 100%;
+  height: 45%;
+  margin: auto;
+  overflow-y: auto;
+}
+
+.checkbox-contacts {
+  display: flex;
+  align-items: center;
+  padding: 5px;
+}
+
+.checkbox-contacts label {
+  display: flex;
+  align-items: center;
+  color: #fff;
+  cursor: pointer;
+  position: relative;
+}
+
+.checkbox-contacts label span {
+  display: inline-block;
+  position: relative;
+  background-color: transparent;
+  width: 20px;
+  height: 20px;
+  transform-origin: center;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 10px;
+  transition: background-color 150ms 200ms, transform 350ms cubic-bezier(0.78, -1.22, 0.17, 1.89);
+}
+
+.checkbox-contacts label span:before {
+  content: "";
+  width: 0px;
+  height: 2px;
+  border-radius: 2px;
+  background: #fff;
+  position: absolute;
+  transform: rotate(45deg);
+  top: 8px;
+  left: 5px;
+  transition: width 50ms ease 50ms;
+  transform-origin: 0% 0%;
+}
+
+.checkbox-contacts label span:after {
+  content: "";
+  width: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: #fff;
+  position: absolute;
+  transform: rotate(305deg);
+  top: 11px;
+  left: 6px;
+  transition: width 50ms ease;
+  transform-origin: 0% 0%;
+}
+
+.checkbox-contacts label:hover span:before {
+  width: 5px;
+  transition: width 100ms ease;
+}
+
+.checkbox-contacts label:hover span:after {
+  width: 10px;
+  transition: width 150ms ease 100ms;
+}
+
+.checkbox-contacts input[type=checkbox] {
+  display: none;
+}
+
+.checkbox-contacts input[type=checkbox]:checked + label span {
+  background-color: #f0003c;
+  /* Background color when checked */
+  transform: scale(1.25);
+}
+
+.checkbox-contacts input[type=checkbox]:checked + label span {
+  border-color: #f0003c;
+}
+
+.checkbox-contacts input[type=checkbox]:checked + label span:after {
+  width: 10px;
+  background: #ffffff;
+  /* Checkmark color is white when checked */
+  transition: width 150ms ease 100ms;
+}
+
+.checkbox-contacts input[type=checkbox]:checked + label span:before {
+  width: 5px;
+  background: #ffffff;
+  /* Checkmark color is white when checked */
+  transition: width 150ms ease 100ms;
+}
+
+.checkbox-contacts input[type=checkbox]:checked + label:hover span {
+  background-color: #f0003c;
+  transform: scale(1.25);
+}
+
+.checkbox-contacts input[type=checkbox]:checked + label:hover span:after {
+  width: 10px;
+  background: #ffffff;
+  transition: width 150ms ease 100ms;
+}
+
+.checkbox-contacts input[type=checkbox]:checked + label:hover span:before {
+  width: 5px;
+  background: #ffffff;
+  transition: width 150ms ease 100ms;
+}
+
+.btn_send_notification {
+  width: 120px;
+  height: 120px;
+  padding: 5px;
+  margin-top: 15px;
+  border: 3px solid #b42227;
+  border-radius: 50%;
+  background: #d40035;
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  cursor: pointer;
+}
+
+.btn_send_notification:hover {
+  background: #333333;
+  box-shadow: 0px 0px 10px 10px #a0022a;
+}
+
+.btn_send_notification:active {
+  box-shadow: none;
+}
+
+.notify_btn_close {
+  background: none;
+  color: #ffffff;
+  text-decoration: underline;
+  border: none;
+  font-size: 1.1rem;
+  margin-top: 10px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: 0.1s;
+}
+
+.notify_btn_close:hover {
+  color: #858585;
 }

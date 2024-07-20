@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import config from './config';
+
 
 const AddressForm = () => {
   const [credentials, setCredentials] = useState({
@@ -12,7 +14,7 @@ const AddressForm = () => {
   useEffect(() => {
     const token = localStorage.getItem('Token');
     if (token) {
-      fetch('http://localhost:5041/api/Auth/validate-jwt', {
+      fetch(`${config.apiBaseUrl}/api/Auth/validate-jwt`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -41,7 +43,7 @@ const AddressForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetch('http://localhost:5041/api/Auth/login', {
+    fetch(`${config.apiBaseUrl}/api/Auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
