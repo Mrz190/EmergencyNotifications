@@ -295,33 +295,6 @@ const MainPage = () => {
         className={`contact_list_wrapper ${isNotifyOpen ? 'show' : ''}`}
         onMouseLeave={handleMouseLeave}
       >
-        {/* <div className="contact_list_field">
-          <h1>NOTIFY USERS</h1><br />
-          <form onSubmit={NotifyUsers} className="notify_form">
-            <div className="message_area_notify">
-              <textarea placeholder="Type message notification:" className="textarea_notify_message"></textarea>
-            </div>
-            <div className="contacts_area_notify">
-              <h2>WHO TO NOTIFY?</h2>
-              <div className="contacts_selection">
-                {contacts.map(contact => (
-                  <div key={contact.Id} className="checkbox-contacts">
-                    <input type="checkbox" id={`contact-${contact.Id}`} name="notifyContacts" value={contact.Id} />
-                    <label htmlFor={`contact-${contact.Id}`}>
-                      <span></span>{contact.Name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-              <button type="submit" className="btn_send_notification">NOTIFY</button>
-            </div>
-          </form>
-          <button className="notify_btn_close" onClick={handleNotifyButtonClick}>Close</button>
-        </div>
-         */}
-
-
-
         <div className="contact_list_field">
           <h1>NOTIFY USERS</h1><br />
           <form onSubmit={NotifyUsers} className="notify_form">
