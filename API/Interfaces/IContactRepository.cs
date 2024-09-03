@@ -16,6 +16,7 @@ namespace API.Interfaces
         Task<IEnumerable<GetContactsDto>> GetContactByName(string name, string contactCreator);
         Task UpdateContactAsync(Contact contact);
         Task<IEnumerable<Recipient>> GetContactsForMail(List<Recipient> recipients);
-        Task<bool> DeleteContactAsync(int id, string contactCreator);    
+        Task<bool> DeleteContactAsync(int id, string contactCreator);
+        Task<bool> IsValidEmail(string email);
     }
 }

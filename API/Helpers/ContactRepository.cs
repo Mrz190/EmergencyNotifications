@@ -5,6 +5,8 @@ using API.Entity;
 using API.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Mail;
+using System.Text.RegularExpressions;
 
 namespace API.Services
 {
@@ -117,6 +119,15 @@ namespace API.Services
                 return true;
             }
             return false;
+        }
+
+        public async Task<bool> IsValidEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            string pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            return Regex.IsMatch(email, pattern);
         }
     }
 }

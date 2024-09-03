@@ -371,6 +371,12 @@ header {
   border-collapse: collapse;
 }
 
+.table_contacts_wrapper {
+  padding-right: 0.5em;
+  width: 100%;
+  overflow-y:scroll;
+}
+
 .table th {
   font-weight: bold;
   padding: 5px;
@@ -403,7 +409,7 @@ header {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .btn_del_contact {
@@ -445,6 +451,7 @@ header {
   flex-direction: column;
   opacity: 0;
   transition: 0.2s;
+  /* overflow-y: auto; */
 }
 
 .edit_contacts_field span {
@@ -879,6 +886,15 @@ header {
   transition: width 150ms ease 100ms;
 }
 
+@keyframes border-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 8px 15px rgba(255, 255, 255, 0);
+  }
+}
+
 .btn_send_notification {
   width: 120px;
   height: 120px;
@@ -888,10 +904,29 @@ header {
   border-radius: 50%;
   background: #d40035;
   color: #ffffff;
-  font-size: 1.3rem;
+  font-size: 1.05rem;
   font-weight: bold;
   letter-spacing: 2px;
   cursor: pointer;
+}
+
+.btn_send_notification.sending {
+  background: transparent;
+  animation: border-pulse 1.5s infinite;
+}
+
+.btn_send_notification.success {
+  background-color: #28a745;
+  border: 3px solid #28a745;
+  animation: none;
+}
+
+.btn_send_notification.disabled {
+  cursor: not-allowed;
+}
+
+.btn_send_notification.animating {
+  animation: border-pulse 1.5s infinite;
 }
 
 .btn_send_notification:hover {
@@ -900,6 +935,12 @@ header {
 }
 
 .btn_send_notification:active {
+  box-shadow: none;
+}
+
+.btn_send_notification.success:hover {
+  cursor: not-allowed;
+  background: #28a745;
   box-shadow: none;
 }
 

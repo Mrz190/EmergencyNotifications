@@ -14,6 +14,7 @@ namespace API.Mapping
             CreateMap<Contact, NewContactDto>();
             CreateMap<EditContactDto, Contact>();
             CreateMap<Contact, EditContactDto>();
+            CreateMap<GetContactsDto, Contact>().ReverseMap();
         }
     }
 }

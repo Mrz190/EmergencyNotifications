@@ -12,6 +12,9 @@ const MainPage = () => {
     CreatedBy: ''
   });
 
+
+  const [isSending, setIsSending] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [contacts, setContacts] = useState([]);
@@ -132,45 +135,45 @@ const MainPage = () => {
 
   const NotifyUsers = (e) => {
     e.preventDefault();
+    setIsSending(true);
+    setIsSuccess(false);
+  
     const token = localStorage.getItem('Token');
+    
     if (token) {
       const recipients = contacts
         .filter(contact => selectedContacts.includes(contact.Id.toString()))
         .map(contact => ({ id: contact.Id, mail: contact.Email }));
-      
+  
       const payload = {
         mailMessage: {
           subject: `Emergency Notification From`,
-          messageBody: notificationMessageBody
+          messageBody: notificationMessageBody,
         },
-        recipients
+        recipients,
       };
-
+  
       fetch(`${config.apiBaseUrl}/api/Email/send-mail`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       })
-        .then(response => {
+        .then((response) => {
           if (!response.ok) {
             throw new Error('Network response was not ok');
           }
-          setSuccess('Notification sent successfully!');
-          setError('');
+          setIsSuccess(true);
           setTimeout(() => {
-            setSuccess('');
+            setIsSending(false);
+            setIsSuccess(false);
           }, 4500);
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('There was an error sending the notification!', error);
-          setError('There was an error sending the notification!');
-          setSuccess('');
-          setTimeout(() => {
-            setError('');
-          }, 4500);
+          setIsSending(false);
         });
     }
   };
@@ -266,6 +269,7 @@ const MainPage = () => {
           <span>C<br />O<br />N<br />T<br />A<br />C<br />T<br />S<br /></span>
           <div className="hidden_edit_block">
             <h2>MY CONTACTS</h2>
+            <div className="table_contacts_wrapper">
             <table className="table">
               <thead>
                 <tr>
@@ -288,6 +292,8 @@ const MainPage = () => {
                 ))}
               </tbody>
             </table>
+            </div>
+            
           </div>
         </div>
       </div>
@@ -324,7 +330,13 @@ const MainPage = () => {
                   </div>
                 ))}
               </div>
-              <button type="submit" className="btn_send_notification">NOTIFY</button>
+              <button
+  type="submit"
+  className={`btn_send_notification ${isSending ? 'sending disabled' : ''} ${isSuccess ? 'success disabled' : ''}`}
+  disabled={isSending || !isNotifyOpen || isSuccess}
+>
+  {isSending ? (isSuccess ? 'SENT' : 'SENDING...') : 'NOTIFY'}
+</button>
             </div>
           </form>
           <button className="notify_btn_close" onClick={handleNotifyButtonClick}>Close</button>

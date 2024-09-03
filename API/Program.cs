@@ -5,9 +5,11 @@ using API.Helpers;
 using API.Interfaces;
 using API.Middleware;
 using API.Services;
+using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json.Serialization;
 using Serilog;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,15 +42,22 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
+
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
 builder.Services.AddSingleton<IRedisService, RedisService>();
+
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 builder.Services.AddLogging();
+
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddMediatR(Assembly.GetExecutingAssembly());
 
 var app = builder.Build();
 
