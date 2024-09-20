@@ -27,6 +27,8 @@ namespace API.Controllers
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
             var userPhone = User.FindFirst("Phone")?.Value?.Remove(0, 7);
 
+            contactDto.CreatedBy = userName;
+
             var command = new AddContactCommand
             {
                 newContactDto = contactDto,

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ReactComponent as CloseIcon } from './img/close.svg';
 import config from './config';
 
 const MainPage = () => {
@@ -12,7 +11,7 @@ const MainPage = () => {
     CreatedBy: ''
   });
 
-
+  const [editContact, setEditContact] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -22,12 +21,54 @@ const MainPage = () => {
   const [isContactSelectionVisible, setIsContactSelectionVisible] = useState(false);
   const [notificationMessageBody, setNotificationMessageBody] = useState('');
   const [selectedContacts, setSelectedContacts] = useState([]);
+  const [isActionModalOpen, setIsActionModalOpen] = useState(null);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCredentials({ ...credentials, [name]: value });
   };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditContact((prev) => ({ ...prev, [name]: value }));
+};
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('Token');
+    if (token) {
+      fetch(`${config.apiBaseUrl}/api/Contact/${editContact.Id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(editContact),
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          setSuccess('Contact updated successfully!');
+          setError('');
+          setTimeout(() => {
+            setSuccess('');
+          }, 4500);
+          setIsActionModalOpen(null);
+          setEditContact(null);
+        })
+        .catch(error => {
+          console.error('There was an error updating the contact!', error);
+          setError('There was an error updating the contact!');
+          setSuccess('');
+          setTimeout(() => {
+            setError('');
+          }, 4500);
+        });
+    }
+  };
+
 
   useEffect(() => {
     const token = localStorage.getItem('Token');
@@ -81,7 +122,6 @@ const MainPage = () => {
   }, []);
 
   const delAction = (id) => {
-    debugger
     const token = localStorage.getItem('Token');
     if (token) {
       fetch(`${config.apiBaseUrl}/api/Contact/${id}`, {
@@ -96,8 +136,8 @@ const MainPage = () => {
             throw new Error('Network response was not ok');
           }
           setContacts(contacts.filter(contact => contact.id !== id));
-
           setSuccess('Contact deleted successfully');
+          fetchContacts();
           setError('');
           setTimeout(() => {
             setSuccess('');
@@ -128,7 +168,7 @@ const MainPage = () => {
 
   const handleContactSelection = (e) => {
     const { value, checked } = e.target;
-    setSelectedContacts((prevSelectedContacts) => 
+    setSelectedContacts((prevSelectedContacts) =>
       checked ? [...prevSelectedContacts, value] : prevSelectedContacts.filter((id) => id !== value)
     );
   };
@@ -137,14 +177,14 @@ const MainPage = () => {
     e.preventDefault();
     setIsSending(true);
     setIsSuccess(false);
-  
+
     const token = localStorage.getItem('Token');
-    
+
     if (token) {
       const recipients = contacts
         .filter(contact => selectedContacts.includes(contact.Id.toString()))
         .map(contact => ({ id: contact.Id, mail: contact.Email }));
-  
+
       const payload = {
         mailMessage: {
           subject: `Emergency Notification From`,
@@ -152,7 +192,7 @@ const MainPage = () => {
         },
         recipients,
       };
-  
+
       fetch(`${config.apiBaseUrl}/api/Email/send-mail`, {
         method: 'POST',
         headers: {
@@ -231,6 +271,16 @@ const MainPage = () => {
     }
   };
 
+  const openActionModal = (id) => {
+    const contactToEdit = contacts.find(contact => contact.Id === id);
+    setEditContact(contactToEdit);
+    setIsActionModalOpen(id);
+  };
+
+  const closeActionModal = () => {
+    setIsActionModalOpen(null);
+  };
+
   return (
     <div className="global_wrapper">
       <header>
@@ -270,30 +320,86 @@ const MainPage = () => {
           <div className="hidden_edit_block">
             <h2>MY CONTACTS</h2>
             <div className="table_contacts_wrapper">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Email</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {contacts.map(contact => (
-                  <tr key={contact.Id}>
-                    <td>{contact.Name}</td>
-                    <td>{contact.Phone}</td>
-                    <td>{contact.Email}</td>
-                    <td>
-                      <button className="btn_del_contact" type="button" onClick={() => delAction(contact.Id)}><CloseIcon /></button>
-                    </td>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {contacts.map(contact => (
+                    <tr key={contact.Id}>
+                      <td>{contact.Name}</td>
+                      <td>{contact.Phone}</td>
+                      <td>{contact.Email}</td>
+                      <td className="action-cell">
+                        <button className="btn_action" type="button" onClick={() => openActionModal(contact.Id)}>
+                          ...
+                        </button>
+
+                        {isActionModalOpen === contact.Id && (
+                          <div className={`modal action-modal ${isActionModalOpen === contact.Id ? 'action-modal' : ''}`}>
+                            <div className="modal_content">
+                              <h2>Choose an action</h2>
+
+
+                              {isActionModalOpen === contact.Id ? (
+                                editContact && (
+                                  <form onSubmit={handleEditSubmit}>
+                                    <input
+                                      className="input_edit_modal input_contact"
+                                      type="text"
+                                      name="Name"
+                                      value={editContact.Name || ''}
+                                      onChange={handleEditChange}
+                                      placeholder="Name"
+                                      required
+                                    />
+                                    <input
+                                      className="input_edit_modal input_contact"
+                                      type="tel"
+                                      name="Phone"
+                                      value={editContact.Phone || ''}
+                                      onChange={handleEditChange}
+                                      placeholder="Phone"
+                                      required
+                                    />
+                                    <input
+                                      className="input_edit_modal input_contact"
+                                      type="email"
+                                      name="Email"
+                                      value={editContact.Email || ''}
+                                      onChange={handleEditChange}
+                                      placeholder="Email"
+                                      required
+                                    />
+                                    <button type="submit" className="btn_create_contact btn_update">Save</button>
+                                  </form>
+                                )
+                              ) : (
+                                <div>
+                                  <span>{contact.Name}</span>
+                                  <span>{contact.Phone}</span>
+                                  <span>{contact.Email}</span>
+                                  <button onClick={() => openActionModal(contact.Id)}>Edit</button>
+                                  <button onClick={() => delAction(contact.Id)}>Delete</button>
+                                </div>
+                              )}
+
+                              <button className="btn_del_contact" onClick={() => delAction(contact.Id)}>Delete</button>
+                              <button className="close_btn" onClick={closeActionModal}>Cancel</button>
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            
           </div>
         </div>
       </div>
@@ -305,9 +411,9 @@ const MainPage = () => {
           <h1>NOTIFY USERS</h1><br />
           <form onSubmit={NotifyUsers} className="notify_form">
             <div className="message_area_notify">
-              <textarea 
-                placeholder="Type message notification:" 
-                className="textarea_notify_message" 
+              <textarea
+                placeholder="Type message notification:"
+                className="textarea_notify_message"
                 value={notificationMessageBody}
                 onChange={handleMessageBodyChange}
               ></textarea>
@@ -317,12 +423,12 @@ const MainPage = () => {
               <div className="contacts_selection">
                 {contacts.map(contact => (
                   <div key={contact.Id} className="checkbox-contacts">
-                    <input 
-                      type="checkbox" 
-                      id={`contact-${contact.Id}`} 
-                      name="notifyContacts" 
-                      value={contact.Id} 
-                      onChange={handleContactSelection} 
+                    <input
+                      type="checkbox"
+                      id={`contact-${contact.Id}`}
+                      name="notifyContacts"
+                      value={contact.Id}
+                      onChange={handleContactSelection}
                     />
                     <label htmlFor={`contact-${contact.Id}`}>
                       <span></span>{contact.Name}
@@ -331,12 +437,12 @@ const MainPage = () => {
                 ))}
               </div>
               <button
-  type="submit"
-  className={`btn_send_notification ${isSending ? 'sending disabled' : ''} ${isSuccess ? 'success disabled' : ''}`}
-  disabled={isSending || !isNotifyOpen || isSuccess}
->
-  {isSending ? (isSuccess ? 'SENT' : 'SENDING...') : 'NOTIFY'}
-</button>
+                type="submit"
+                className={`btn_send_notification ${isSending ? 'sending disabled' : ''} ${isSuccess ? 'success disabled' : ''}`}
+                disabled={isSending || !isNotifyOpen || isSuccess}
+              >
+                {isSending ? (isSuccess ? 'SENT' : 'SENDING...') : 'NOTIFY'}
+              </button>
             </div>
           </form>
           <button className="notify_btn_close" onClick={handleNotifyButtonClick}>Close</button>
