@@ -1,0 +1,33 @@
+# Используем образ Node.js для сборки
+FROM node:19
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Копируем package.json и package-lock.json
+COPY package.json package-lock.json ./
+
+# Устанавливаем зависимости
+RUN npm install
+
+# Копируем все файлы приложения
+COPY . .
+
+# Собираем приложение
+RUN npm run build
+
+# Устанавливаем сервер для обслуживания статических файлов
+FROM nginx:alpine
+
+# Копируем кастомный конфиг Nginx
+RUN rm /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Копируем файлы сборки в Nginx
+COPY --from=0 /app/build /usr/share/nginx/html
+
+# Открываем порт 80
+EXPOSE 80
+
+# Запускаем Nginx
+CMD ["nginx", "-g", "daemon off;"]

@@ -24,6 +24,10 @@
         z-index: 3;
     }
 
+    .add_contacts_field span,.edit_contacts_field span {
+        opacity: 1;
+        font-size: 18px;
+    }
     .wrapper_notify_btn_1,
     .wrapper_notify_btn_2,
     .wrapper_notify_btn_3,
@@ -99,7 +103,7 @@
     }
 
     .textarea_notify_message {
-        margin-bottom: 10%;
+        margin-top: 25px;
     }
 }
 
@@ -127,9 +131,17 @@
 @media(max-width: 600px){
     .textarea_notify_message {
         width: 100%;
-        min-height: 200px;
+        min-height: 180px;
         margin-top: 0px;
         font-size: 17px;
+        margin-top: 20px;
+        margin-bottom: 0px;
+    }
+    .contacts_area_notify h2 {
+        margin-bottom: 0px;
+    }
+    .btn_send_notification {
+        margin-top: 0px;
     }
 }
 
@@ -205,11 +217,28 @@
     .add_contacts_field,
     .edit_contacts_field {
         width: 40px;
-        height: 60%;
+        height: 70%;
     }
 
     .header_name {
         padding-top: 50px;
+    }
+
+    .btn_action {
+        padding: 6px 10px;
+        font-size: 10px;
+    }
+    
+    .contact_list_wrapper {
+        height: 90%;
+    }
+
+    .input_contact {
+        height: 25px;
+        margin-top: 20px;
+    }
+    .btn_create_contact {
+        margin-top: 20px;
     }
 }
 
@@ -259,10 +288,57 @@
 
     .add_contacts_field,
     .edit_contacts_field {
-        height: 55%;
+        height: 80%;
     }
 
     table {
         font-size: 12px;
+    }
+    .input_contact {
+        font-size: 14px;
+        margin-top: 18px;
+        margin-bottom: 8px;
+    }
+    .btn_create_contact {
+        margin-top: 10px;
+    }
+    .notify_btn_close {
+        margin-top: 25px;
+    }
+}
+
+@media(max-width:400px) {
+    .wrapper_notify_btn_1 {
+        width: 100%;
+    }
+    .textarea_notify_message {
+        min-height: 140px;
+        margin-top: 10px;
+    }
+}
+
+@media(max-height:700px) {
+    .contact_list_field h1:first-child {
+        font-size: 20px;
+        margin-bottom: 5px;
+    }
+    .textarea_notify_message {
+        min-height: 100px !important;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+    .contacts_area_notify {
+        margin-top: 5px;
+    }
+    .notify_btn_close {
+        margin-top: 5px;
+    }
+    .btn_send_notification {
+        width: 100px;
+        height: 100px;
+        font-size: 1.01rem;
+    }
+    .contacts_area_notify h2:first-child {
+        font-size: 19px;
     }
 }

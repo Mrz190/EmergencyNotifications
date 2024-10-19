@@ -32,7 +32,7 @@ const MainPage = () => {
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditContact((prev) => ({ ...prev, [name]: value }));
-};
+  };
 
   const handleEditSubmit = (e) => {
     e.preventDefault();
@@ -69,6 +69,25 @@ const MainPage = () => {
     }
   };
 
+  const fetchContacts = () => {
+    const token = localStorage.getItem('Token');
+    if (token) {
+      fetch(`${config.apiBaseUrl}/api/Contact/contacts-list`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+      })
+        .then(response => response.json())
+        .then(data => {
+          setContacts(data);
+        })
+        .catch(error => {
+          console.error('There was an error fetching the contacts!', error);
+        });
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('Token');
@@ -95,30 +114,10 @@ const MainPage = () => {
   }, [navigate]);
 
   useEffect(() => {
-    const token = localStorage.getItem('Token');
-    if (token) {
-      const fetchContacts = () => {
-        fetch(`${config.apiBaseUrl}/api/Contact/contacts-list`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-        })
-          .then(response => response.json())
-          .then(data => {
-            setContacts(data);
-          })
-          .catch(error => {
-            console.error('There was an error fetching the contacts!', error);
-          });
-      };
+    fetchContacts();
+    const intervalId = setInterval(fetchContacts, 1000);
 
-      fetchContacts();
-      const intervalId = setInterval(fetchContacts, 1000);
-
-      return () => clearInterval(intervalId);
-    }
+    return () => clearInterval(intervalId);
   }, []);
 
   const delAction = (id) => {

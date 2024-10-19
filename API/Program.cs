@@ -36,6 +36,18 @@ builder.Services.ConnectSqlServer(builder.Configuration);
 
 builder.Services.AddControllers();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyHeader()
+               .AllowAnyMethod()
+               .WithExposedHeaders("*");
+    });
+});
+
+
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetSection("Redis").GetValue<string>("ConnectionString");
@@ -49,7 +61,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-builder.Services.AddSingleton<IRedisService, RedisService>();
+builder.Services.AddSingleton<IRedisService, RedisService>(); 
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -75,13 +87,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v2");
     });
 }
 
-app.UseHttpsRedirection();
-
 app.UseRouting();
+
+app.UseCors("AllowAllOrigins");
+
+app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
