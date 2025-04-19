@@ -23,31 +23,34 @@ namespace API.Cqrs.ContactService.Handler
         {
             var contactDto = command.newContactDto;
 
-            if (contactDto.Phone.Any(c => !char.IsDigit(c) && c != '+')) return new BadRequestObjectResult("Phone can contains only digits.");
-            
-            if (!isEmailValid(contactDto.Email))
-                return new BadRequestObjectResult("Incorrect email.");
+            if (contactDto.Phone.Any(c => !char.IsDigit(c) && c != '+'))
+                return new BadRequestObjectResult("Phone can contain only digits.") { StatusCode = 400 };
 
-            if (await _contactRepository.UniqueContactPhoneExists(contactDto.Name, contactDto.Phone, command.UserName)) return new NotFoundObjectResult("Contact with this phone already exists.");
-            
-            if (await _contactRepository.UniqueContactEmailExists(contactDto.Name, contactDto.Email, command.UserName)) return new NotFoundObjectResult("Contact with this email already exists.");
+            if (!isEmailValid(contactDto.Email))
+                return new BadRequestObjectResult("Incorrect email.") { StatusCode = 400 };
+
+            if (await _contactRepository.UniqueContactPhoneExists(contactDto.Name, contactDto.Phone, command.UserName))
+                return new ConflictObjectResult("Contact with this phone already exists.") { StatusCode = 409 };
+
+            if (await _contactRepository.UniqueContactEmailExists(contactDto.Name, contactDto.Email, command.UserName))
+                return new ConflictObjectResult("Contact with this email already exists.") { StatusCode = 409 };
 
             var contact = _contactRepository.CreateContact(contactDto);
 
-            // Check for changes in the context
             var changes = _unitOfWork.Context.ChangeTracker.Entries()
                                 .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted)
                                 .ToList();
 
             if (!changes.Any())
             {
-                return new BadRequestObjectResult("No changes detected.");
+                return new BadRequestObjectResult("No changes detected.") { StatusCode = 400 };
             }
 
             await _unitOfWork.CompleteAsync();
 
-            return new OkObjectResult(contact);
+            return new OkObjectResult(contact) { StatusCode = 200 };
         }
+
 
         private bool isEmailValid(string email)
         {

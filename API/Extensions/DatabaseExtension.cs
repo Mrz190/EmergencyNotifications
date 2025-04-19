@@ -15,6 +15,15 @@ namespace API.Extensions
             return services;
         }
 
+        public static IServiceCollection ConnectPostgreSQL(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddDbContext<DataContext>(options =>
+            {
+                options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+            });
+            return services;
+        }
+
         public static IServiceCollection ConnectMongo(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddSingleton<MongoDbContext>(serviceProvider =>

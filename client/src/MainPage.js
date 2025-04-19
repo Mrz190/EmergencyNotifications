@@ -174,46 +174,54 @@ const MainPage = () => {
 
   const NotifyUsers = (e) => {
     e.preventDefault();
-    setIsSending(true);
-    setIsSuccess(false);
 
     const token = localStorage.getItem('Token');
 
     if (token) {
-      const recipients = contacts
-        .filter(contact => selectedContacts.includes(contact.Id.toString()))
-        .map(contact => ({ id: contact.Id, mail: contact.Email }));
+      if (!notificationMessageBody || notificationMessageBody.trim() == "") {
+        alert("You can't send it while filed is empty.");
+      } else {
+        const recipients = contacts
+          .filter(contact => selectedContacts.includes(contact.Id.toString()))
+          .map(contact => ({ id: contact.Id, mail: contact.Email }));
 
-      const payload = {
-        mailMessage: {
-          subject: `Emergency Notification From`,
-          messageBody: notificationMessageBody,
-        },
-        recipients,
-      };
-
-      fetch(`${config.apiBaseUrl}/api/Email/send-mail`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          setIsSuccess(true);
-          setTimeout(() => {
-            setIsSending(false);
-            setIsSuccess(false);
-          }, 4500);
-        })
-        .catch((error) => {
-          console.error('There was an error sending the notification!', error);
-          setIsSending(false);
-        });
+        if (recipients.length == 0) {
+          alert("You must choose somebody to send message.");
+        }else{
+          setIsSending(true);
+          setIsSuccess(false);
+          const payload = {
+            mailMessage: {
+              subject: `Emergency Notification From`,
+              messageBody: notificationMessageBody,
+            },
+            recipients,
+          };
+    
+          fetch(`${config.apiBaseUrl}/api/Email/send-mail`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload),
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error('Network response was not ok');
+              }
+              setIsSuccess(true);
+              setTimeout(() => {
+                setIsSending(false);
+                setIsSuccess(false);
+              }, 4500);
+            })
+            .catch((error) => {
+              console.error('There was an error sending the notification!', error);
+              setIsSending(false);
+            });
+        }
+      }    
     }
   };
 
@@ -420,20 +428,23 @@ const MainPage = () => {
             <div className="contacts_area_notify">
               <h2>WHO TO NOTIFY?</h2>
               <div className="contacts_selection">
-                {contacts.map(contact => (
-                  <div key={contact.Id} className="checkbox-contacts">
-                    <input
-                      type="checkbox"
-                      id={`contact-${contact.Id}`}
-                      name="notifyContacts"
-                      value={contact.Id}
-                      onChange={handleContactSelection}
-                    />
-                    <label htmlFor={`contact-${contact.Id}`}>
-                      <span></span>{contact.Name}
-                    </label>
-                  </div>
-                ))}
+                {contacts.length > 0 ? (
+                  contacts.map(contact => (
+                    <div key={contact.Id} className="checkbox-contacts">
+                      <input
+                        type="checkbox"
+                        id={`contact-${contact.Id}`}
+                        name="notifyContacts"
+                        value={contact.Id}
+                        onChange={handleContactSelection}
+                      />
+                      <label htmlFor={`contact-${contact.Id}`}>
+                        <span></span>{contact.Name}
+                      </label>
+                    </div>
+                  ))
+                ) : <p className="no_contact_label">No contacts found.</p>}
+
               </div>
               <button
                 type="submit"

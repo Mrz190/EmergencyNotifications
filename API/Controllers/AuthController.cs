@@ -10,6 +10,8 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace API.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class AuthController : BaseApiController
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -34,29 +36,38 @@ namespace API.Controllers
         [HttpPost("reg")]
         public async Task<ActionResult<UserDto>> CreateMember(RegDto regDto)
         {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
             try
             {
-                if (await UserExists(regDto.UserName)) return BadRequest("User already exists.");
-                if (await EmailExist(regDto.Email)) return BadRequest("Account with this email already exists.");
+                var existingUser = await _userManager.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x =>
+                        (x.UserName == regDto.UserName.ToLower() || x.Email == regDto.Email) && x.IsActive);
+
+                if (existingUser != null)
+                {
+                    if (existingUser.UserName == regDto.UserName.ToLower())
+                        return BadRequest("User already exists.");
+                    return BadRequest("Account with this email already exists.");
+                }
 
                 var user = _mapper.Map<AppUser>(regDto);
                 user.UserName = regDto.UserName.ToLower();
                 user.IsActive = true;
 
                 var result = await _userManager.CreateAsync(user, regDto.Password);
-                if (!result.Succeeded) throw new Exception("Failed to create user.");
+                if (!result.Succeeded) return BadRequest("Failed to create user.");
 
-                var roleExists = await _userManager.IsInRoleAsync(user, "Member");
-                if (!roleExists)
+                if (!await _userManager.IsInRoleAsync(user, "Member"))
                 {
                     var roleResult = await _userManager.AddToRoleAsync(user, "Member");
-                    if (!roleResult.Succeeded) throw new Exception("Failed to assign role.");
+                    if (!roleResult.Succeeded) return BadRequest("Failed to assign role.");
                 }
 
                 string token = await _token.CreateToken(user);
-
                 var cacheKey = $"jwt-{user.UserName}";
-                await _cache.SetTokenAsync(cacheKey, token);
+                await _cache.SetTokenAsync(cacheKey, token, TimeSpan.FromHours(2));
 
                 return new UserDto
                 {
@@ -76,15 +87,20 @@ namespace API.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
         {
-            var user = await _userManager.Users.SingleOrDefaultAsync(n => n.UserName == loginDto.UserName && n.IsActive);
-            if (user == null) return BadRequest("Invalid username/password.");
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var user = await _userManager.Users
+                .AsNoTracking()
+                .SingleOrDefaultAsync(n => n.UserName == loginDto.UserName && n.IsActive);
+
+            if (user == null) return Unauthorized("Invalid username/password.");
 
             var result = await _userManager.CheckPasswordAsync(user, loginDto.Password);
-            if (!result) return BadRequest("Invalid username/password.");
+            if (!result) return Unauthorized("Invalid username/password.");
 
             string token = await _token.CreateToken(user);
             string cacheKey = $"jwt-{user.UserName}";
-            await _cache.SetTokenAsync(cacheKey, token);
+            await _cache.SetTokenAsync(cacheKey, token, TimeSpan.FromHours(2));
 
             return new UserDto
             {
@@ -99,71 +115,62 @@ namespace API.Controllers
         [HttpPost("validate-jwt")]
         public async Task<ActionResult<UserDto>> ValidateJWT()
         {
-            var jwtToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            var jwtToken = _httpContextAccessor.HttpContext.Request.Headers["Authorization"]
+                .FirstOrDefault()?.Split(" ").Last();
 
-            if (jwtToken != null)
+            if (string.IsNullOrEmpty(jwtToken)) return Unauthorized("Missing token.");
+
+            string userName = GetUserNameFromToken(jwtToken);
+            if (string.IsNullOrEmpty(userName)) return Unauthorized("Invalid token.");
+
+            var cacheToken = await _cache.GetTokenAsync($"jwt-{userName}");
+            if (cacheToken == null) return Unauthorized("Token expired or revoked.");
+
+            var user = await _userManager.Users
+                .AsNoTracking()
+                .SingleOrDefaultAsync(n => n.UserName == userName && n.IsActive);
+
+            if (user == null) return Unauthorized("User not found.");
+
+            return new UserDto
             {
-                string userName = GetUserNameFromToken(jwtToken);
-
-                var cacheToken = await _cache.GetTokenAsync($"jwt-{userName}");
-
-                if (cacheToken != null)
-                {
-                    var user = await _userManager.Users.SingleOrDefaultAsync(n => n.UserName == userName && n.IsActive);
-
-                    return new UserDto 
-                    {
-                        UserName = user.UserName,
-                        City = user.City,
-                        Country = user.Country,
-                        UserEmail = user.Email,
-                        Token = jwtToken
-                    };
-                }
-                else
-                {
-                    return BadRequest();
-                }
-            }else
-            {
-                return BadRequest();
-            }
+                UserName = user.UserName,
+                City = user.City,
+                Country = user.Country,
+                UserEmail = user.Email,
+                Token = jwtToken
+            };
         }
 
         [Authorize]
         [HttpGet("logout")]
         public async Task<ActionResult> Logout()
         {
-            var token = _httpContextAccessor.HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-            if(token != null)
-            {
-                string name = GetUserNameFromToken(token);
+            var token = _httpContextAccessor.HttpContext.Request.Headers["Authorization"]
+                .FirstOrDefault()?.Split(" ").Last();
 
-                string cacheKey = $"jwt-{name}";
-                await _cache.RemoveTokenAsync(cacheKey);
-                return Ok("Bye :>");
-            }
-            else
-            {
-                return BadRequest();
-            }
+            if (string.IsNullOrEmpty(token)) return BadRequest("Token missing.");
+
+            string name = GetUserNameFromToken(token);
+            if (string.IsNullOrEmpty(name)) return BadRequest("Token invalid.");
+
+            string cacheKey = $"jwt-{name}";
+            await _cache.RemoveTokenAsync(cacheKey);
+            return Ok("Logged out successfully.");
         }
 
-        private async Task<bool> UserExists(string username)
-        {
-            return await _userManager.Users.AnyAsync(x => x.UserName == username.ToLower() && x.IsActive);
-        }
-
-        private async Task<bool> EmailExist(string email)
-        {
-            return await _userManager.Users.AnyAsync(x => x.Email == email && x.IsActive);
-        }
         private string GetUserNameFromToken(string token)
         {
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
-            var username = jwtToken?.Claims.First(claim => claim.Type == "unique_name").Value;
-            return username;
+            try
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
+                return jwtToken?.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.UniqueName)?.Value;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

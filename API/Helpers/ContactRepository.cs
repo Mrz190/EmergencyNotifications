@@ -26,9 +26,9 @@ namespace API.Services
             return await _dataContext.Contact.FindAsync(id);
         }
 
-        public async Task<bool> UniqueContactPhoneExists(string username, string phone, string contactCreator)
+        public async Task<bool> UniqueContactPhoneExists(string contactName, string phone, string contactCreator)
         {
-            return await _dataContext.Contact.AsNoTracking().AnyAsync(x => x.Name == username && x.Phone == phone && x.CreatedBy == contactCreator);
+            return await _dataContext.Contact.AsNoTracking().AnyAsync(x => x.Name == contactName && x.Phone == phone && x.CreatedBy == contactCreator);
         }
 
         public async Task<bool> UniqueContactPhoneExists(int id, string phone, string contactCreator)
@@ -36,9 +36,9 @@ namespace API.Services
             return await _dataContext.Contact.AsNoTracking().AnyAsync(x => x.ContactId != id && x.Phone == phone && x.CreatedBy == contactCreator);
         }
 
-        public async Task<bool> UniqueContactEmailExists(string username, string email, string contactCreator)
+        public async Task<bool> UniqueContactEmailExists(string contactName, string email, string contactCreator)
         {
-            return await _dataContext.Contact.AsNoTracking().AnyAsync(x => x.Name == username && x.Email == email && x.CreatedBy == contactCreator);
+            return await _dataContext.Contact.AsNoTracking().AnyAsync(x => x.Name == contactName && x.Email == email && x.CreatedBy == contactCreator);
         }
 
         public async Task<bool> UniqueContactEmailExists(int id, string email, string contactCreator)

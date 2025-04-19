@@ -14,64 +14,94 @@ namespace API.Controllers
     public class ContactController : BaseApiController
     {
         private readonly IMediator _mediator;
+        private readonly ILogger<ContactController> _logger;
 
-        public ContactController(IMediator mediator)
+        public ContactController(IMediator mediator, ILogger<ContactController> logger)
         {
             _mediator = mediator;
+            _logger = logger;
         }
- 
-        [HttpPost("add-contact")]
-        public async Task<ActionResult<Contact>> AddContact(NewContactDto contactDto)
+
+        // Helper method to retrieve user info
+        private (string UserName, string UserEmail, string UserPhone) GetUserClaims()
         {
             var userName = User.FindFirstValue(ClaimTypes.Name);
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-            var userPhone = User.FindFirst("Phone")?.Value?.Remove(0, 7);
+            var userPhone = User.FindFirst("Phone")?.Value; // Keep the full phone number
 
+            return (userName, userEmail, userPhone);
+        }
+
+        // Add contact (POST)
+        [HttpPost("add-contact")]
+        public async Task<ActionResult<Contact>> AddContact(NewContactDto contactDto)
+        {
+            var (userName, userEmail, userPhone) = GetUserClaims();
             contactDto.CreatedBy = userName;
 
-            var command = new AddContactCommand
+            try
             {
-                newContactDto = contactDto,
-                UserName = userName,
-                UserEmail = userEmail,
-                UserPhone = userPhone
-            };
+                var command = new AddContactCommand
+                {
+                    newContactDto = contactDto,
+                    UserName = userName,
+                    UserEmail = userEmail,
+                    UserPhone = userPhone
+                };
 
-            return await _mediator.Send(command);
+                var result = await _mediator.Send(command);
+
+                if (result.Result is BadRequestObjectResult)
+                {
+                    return BadRequest(result.Value);
+                }
+
+                if (result.Result is ConflictObjectResult)
+                {
+                    return Conflict(result.Value);
+                }
+
+                if (result.Result is NotFoundObjectResult)
+                {
+                    return NotFound(result.Value);
+                }
+
+                return Ok(result.Value);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding contact");
+                return StatusCode(500, "Internal server error");
+            }
         }
 
+        // Get contacts list (GET)
         [HttpGet("contacts-list")]
-        public async Task<IEnumerable<GetContactsDto>> GetMyContacts()
+        public async Task<ActionResult<IEnumerable<GetContactsDto>>> GetMyContacts()
         {
             var userName = User.FindFirstValue(ClaimTypes.Name);
+            var query = new GetContactQuery { UserName = userName };
 
-            var query = new GetContactQuery
-            {
-                UserName = userName
-            };
-
-            return await _mediator.Send(query);
+            var contacts = await _mediator.Send(query);
+            return Ok(contacts);
         }
 
+        // Find contact by name (GET)
         [HttpGet("find-contact")]
-        public async Task<IEnumerable<GetContactsDto>> GetContact(string name)
+        public async Task<ActionResult<IEnumerable<GetContactsDto>>> GetContact(string name)
         {
             var contactCreator = User.FindFirstValue(ClaimTypes.Name);
+            var query = new FindContactQuery { UserName = name, ContactCreator = contactCreator };
 
-            var query = new FindContactQuery
-            {
-                UserName = name,
-                ContactCreator = contactCreator
-            };
-
-            return await _mediator.Send(query);
+            var result = await _mediator.Send(query);
+            return result.Any() ? Ok(result) : NotFound("No contacts found");
         }
 
+        // Update contact (PUT)
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateContact(int id, EditContactDto updatedContact)
         {
             var contactCreator = User.FindFirstValue(ClaimTypes.Name);
-
             var command = new PutContactCommand
             {
                 UserName = contactCreator,
@@ -79,36 +109,43 @@ namespace API.Controllers
                 UpdatedContact = updatedContact
             };
 
-            return await _mediator.Send(command);
+            try
+            {
+                var result = await _mediator.Send(command);
+
+                if (result != null)
+                    return Ok("Contact updated successfully");
+
+                return NotFound("Contact not found");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating contact");
+                return StatusCode(500, "Internal server error");
+            }
         }
 
+        // Patch contact (PATCH)
         [HttpPatch("{id}")]
         public async Task<IActionResult> PatchContact(int id, [FromBody] JsonPatchDocument<EditContactDto> patchDoc)
         {
             if (patchDoc == null)
                 return BadRequest("Invalid patch document.");
 
-            // Получение существующего контакта (можно использовать другой запрос или метод)
             var existingContactDto = await _mediator.Send(new GetContactByIdQuery(id));
             if (existingContactDto == null)
                 return NotFound();
 
-            // Применение патч-документа
             var contactToPatch = new EditContactDto
             {
                 Id = existingContactDto.Id,
                 Name = existingContactDto.Name,
-                Email = existingContactDto.Email,
-                // Другие свойства
+                Email = existingContactDto.Email
             };
 
             patchDoc.ApplyTo(contactToPatch);
-
-            // Валидация
             if (!TryValidateModel(contactToPatch))
-            {
                 return ValidationProblem(ModelState);
-            }
 
             var command = new PatchContactCommand
             {
@@ -118,21 +155,39 @@ namespace API.Controllers
             };
 
             var result = await _mediator.Send(command);
-            return result;
+
+            // Assuming result is an object that could be null or an indicator of success
+            if (result != null)
+                return Ok("Contact patched successfully");
+
+            return NotFound("Contact not found");
         }
 
+        // Delete contact (DELETE)
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteContact(int id)
         {
             var contactCreator = User.FindFirstValue(ClaimTypes.Name);
-
             var command = new DelContactCommand
             {
                 UserName = contactCreator,
                 Id = id
             };
 
-            return await _mediator.Send(command);
+            try
+            {
+                var result = await _mediator.Send(command);
+
+                if (result != null)
+                    return Ok("Contact deleted successfully");
+
+                return NotFound("Contact not found");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting contact");
+                return StatusCode(500, "Internal server error");
+            }
         }
     }
 }

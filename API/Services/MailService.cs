@@ -8,7 +8,6 @@ using API.Dto;
 using MongoDB.Driver;
 using MongoDB.Bson;
 
-
 namespace API.Services
 {
     public class MailService : IMailService
@@ -19,11 +18,11 @@ namespace API.Services
         private const int MaxRetryAttempts = 3;
         private const int DelayMilliseconds = 2000;
 
-        public MailService(IOptions<MailSettings> mailSettings, IContactRepository contactRepository, MongoDbContext mobgoDbContext)
+        public MailService(IOptions<MailSettings> mailSettings, IContactRepository contactRepository, MongoDbContext mongoDbContext)
         {
             _mailSettings = mailSettings.Value;
             _contactRepository = contactRepository;
-            _mailLogs = mobgoDbContext.MailLogs;
+            _mailLogs = mongoDbContext.MailLogs;
         }
 
         public async Task<bool> SendMailAsync(MailRequest mailRequest)
@@ -33,30 +32,35 @@ namespace API.Services
             if (!recipients.Any()) return false;
 
             using var smtp = CreateSmtpClient();
-            
+
             foreach (var recipient in recipients)
             {
                 var mailLog = await CreateMailLogAsync(mailRequest, recipient);
                 bool success = await SendWithRetryAsync(smtp, mailRequest, recipient, mailLog);
 
-                if(!success) return false;
+                if (!success) return false;
             }
+
             return true;
         }
 
         private async Task<IEnumerable<Recipient>> GetRecipientsAsync(IEnumerable<Recipient> recipientRequests)
         {
             var recipients = await _contactRepository.GetContactsForMail(recipientRequests.ToList());
-            return recipients;
+            return recipients ?? Enumerable.Empty<Recipient>();
         }
 
         private SmtpClient CreateSmtpClient()
         {
-            return new SmtpClient(_mailSettings.SmtpServer, _mailSettings.SmtpPort)
+            Console.WriteLine($"SMTP Server: {_mailSettings.SmtpServer}, Port: {_mailSettings.SmtpPort}");
+            Console.WriteLine($"SMTP User: {_mailSettings.SmtpUser}");
+            var smtpClient = new SmtpClient(_mailSettings.SmtpServer, _mailSettings.SmtpPort)
             {
                 Credentials = new NetworkCredential(_mailSettings.SmtpUser, _mailSettings.SmtpPass),
                 EnableSsl = true
             };
+
+            return smtpClient;
         }
 
         private async Task<MailLogDto> CreateMailLogAsync(MailRequest mailRequest, Recipient recipient)
@@ -71,7 +75,16 @@ namespace API.Services
                 CreatedAt = DateTime.UtcNow,
             };
 
-            await _mailLogs.InsertOneAsync(mailLog);
+            try
+            {
+                await _mailLogs.InsertOneAsync(mailLog);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception if inserting mail log fails
+                Console.Error.WriteLine($"Error inserting mail log: {ex.Message}");
+            }
+
             return mailLog;
         }
 
@@ -95,7 +108,7 @@ namespace API.Services
                         return false;
                     }
 
-                    await Task.Delay(DelayMilliseconds * (int)Math.Pow(2, attempt));
+                    await Task.Delay(DelayMilliseconds * (int)Math.Pow(2, attempt)); // Exponential backoff
                 }
             }
 
@@ -121,7 +134,16 @@ namespace API.Services
         {
             var filter = Builders<MailLogDto>.Filter.Eq(m => m.MessageId, mailLog.MessageId);
             var update = Builders<MailLogDto>.Update.Set(m => m.Status, status);
-            await _mailLogs.UpdateOneAsync(filter, update);
+
+            try
+            {
+                await _mailLogs.UpdateOneAsync(filter, update);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception if updating mail log fails
+                Console.Error.WriteLine($"Error updating mail log: {ex.Message}");
+            }
         }
     }
 }

@@ -4,7 +4,7 @@
 }
 
 body {
-  background-color: #36383f;
+  background-color: #1e1f23;
   height: 100vh;
   overflow-y: hidden;
   overflow-x: hidden !important;
@@ -13,6 +13,10 @@ body {
 input,
 textarea {
   outline: none;
+}
+
+.login_header, .register_header {
+  margin-top: 20px;
 }
 
 .auth_wrapper {
@@ -27,6 +31,10 @@ textarea {
 }
 
 .auth_form {
+  width: 30vw;
+}
+
+.reg_form {
   width: 30vw;
 }
 
@@ -167,6 +175,16 @@ textarea {
 
 .button-82-pushable:focus:not(:focus-visible) {
   outline: none;
+}
+
+.auth_link {
+  background: none;
+  color: #fff;
+  font-size: 17px;
+  letter-spacing: 1px;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 header {
@@ -896,6 +914,10 @@ header {
   }
 }
 
+.no_contact_label {
+  color: #fff;
+}
+
 .btn_send_notification {
   width: 120px;
   height: 120px;
@@ -951,7 +973,7 @@ header {
   text-decoration: underline;
   border: none;
   font-size: 1.1rem;
-  margin-top: 40px;
+  margin-top: 80px;
   letter-spacing: 2px;
   cursor: pointer;
   transition: 0.1s;

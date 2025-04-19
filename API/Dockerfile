@@ -1,5 +1,5 @@
 ﻿# Используем образ .NET SDK для сборки
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
 # Копируем файлы проекта
@@ -11,11 +11,13 @@ COPY . ./
 RUN dotnet publish -c Release -o out
 
 # Используем образ ASP.NET Core для запуска приложения
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
 # Копируем опубликованные файлы из предыдущей стадии сборки
 COPY --from=build /app/out .
+
+EXPOSE 80
 
 # Запускаем приложение
 ENTRYPOINT ["dotnet", "API.dll"]
