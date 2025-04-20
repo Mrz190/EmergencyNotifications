@@ -288,6 +288,23 @@ const MainPage = () => {
     setIsActionModalOpen(null);
   };
 
+  const LogoutALg = () => {
+    const token = localStorage.getItem('Token');
+    if(token) {
+      fetch(`${config.apiBaseUrl}/api/Auth/logout`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(response => {
+          localStorage.removeItem('Token');
+          navigate('/');
+        })
+    }
+  };
+
   return (
     <div className="global_wrapper">
       <header>
@@ -295,7 +312,9 @@ const MainPage = () => {
         {error && <div className="error_label_add">{error}</div>}
         {success && <div className="success_label_add">{success}</div>}
       </header>
-
+      <div className="logout_wrapper">
+        <button className='logout_btn' onClick={() => LogoutALg()}>Log out</button>
+      </div>
       <div className="main_container">
         <div className="add_contacts_field">
           <span>A<br />D<br />D<br /><br />C<br />O<br />N<br />T<br />A<br />C<br />T<br /></span>

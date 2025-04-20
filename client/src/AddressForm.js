@@ -26,6 +26,7 @@ const AddressForm = () => {
             navigate('/main');
           } else {
             setError('Token validation failed');
+            localStorage.removeItem('Token');
           }
         })
         .catch(() => {

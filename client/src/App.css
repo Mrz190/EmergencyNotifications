@@ -1129,3 +1129,18 @@ header {
   margin-top: 10px;
   margin-bottom: 15px;
 }
+
+.logout_wrapper {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+}
+
+.logout_btn {
+  border: none;
+  background: transparent;
+  color: #fff;
+  text-decoration: none;
+  font-size: 16px;
+  cursor: pointer;
+}
